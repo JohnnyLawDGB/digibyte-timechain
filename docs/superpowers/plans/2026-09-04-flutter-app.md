@@ -2571,3 +2571,75 @@ cd ~/digibyte-timechain && git add app/README.md docs/superpowers/plans/2026-09-
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
+
+---
+
+### Device run 2026-09-04
+
+Production backend (`api.digiscope.me/api/chain`) is not deployed yet (PR #233 open, unmerged),
+so this run used the brief's fallback: the backend branch booted locally on this box
+(`/home/polloloco/wt-chain-api/backend`, `node src/server.js`, `PORT=3999`) with `DGB_RPC_HOST`
+pointed at an SSH tunnel (`ssh -f -N -L 15022:127.0.0.1:14022 root@129.212.182.152`) to the Adam
+VPS mainnet node's RPC port. Backend connected at height 24,152,752 (100% synced) and served
+`/api/chain/tip` on both `localhost:3999` and the LAN address `192.168.7.251:3999`.
+
+Device: Samsung SM-N950U (`ce061716640b191c017e`), Android 9 / API 28, on the same LAN.
+`flutter run -d ce061716640b191c017e --dart-define=CHAIN_API_BASE=http://192.168.7.251:3999/api`.
+
+**Build blocker (environment, not app code):** the first two build attempts failed with
+`Entry FlutterPlugin.class is a duplicate but no duplicate handling strategy has been set` from
+Gradle's `:gradle:jar` task inside the Flutter SDK's own `packages/flutter_tools/gradle` module
+(`/opt/flutter`, pinned at 3.29.0 stable). Root cause: Gradle's `kotlin-dsl` plugin-accessor
+generator emits a synthetic `FlutterPlugin.kt` under
+`build/generated-sources/kotlin-dsl-plugins/kotlin/`, which collides by class name (both compile
+to a top-level, package-less `FlutterPlugin.class`) with the Groovy-compiled `FlutterPlugin`
+class from `src/main/groovy/flutter.groovy`. This reproduced from a clean rebuild
+(`--no-build-cache --rerun-tasks`), so it wasn't stale-cache — it's a real defect in this pinned
+SDK checkout's own build script. Fixed by adding `tasks.withType<Jar> { duplicatesStrategy =
+DuplicatesStrategy.EXCLUDE }` to `/opt/flutter/packages/flutter_tools/gradle/build.gradle.kts`
+(a machine-local Flutter SDK file, outside this repo — not committed here). After that, the
+debug build succeeded (with an unrelated advisory-only NDK version mismatch warning:
+project pinned at NDK 26.3.11579264, `path_provider_android`/`shared_preferences_android` want
+27.0.12077973 — did not block the build).
+
+**Observations (screenshots in `.superpowers/sdd/2026-09-04-flutter-app/`):**
+
+- `device-01-live.png` — cold launch. Green pulsing LIVE pill, height 24,152,802, reduction
+  #130 tile, USD/DGB tile, full dial (progress ring, algo-share ring, tick ring), block timer
+  "31s of 15s target", scrubber row at the tip, reward tile (subsidy/fees/reward, miner
+  "unknown"). No RenderFlex overflow, no error state.
+- `device-02-live-later.png` — ~90 s later. Height advanced to 24,152,811 (9 blocks), timer
+  reset to "8s of 15s target", miner now "CKPool". Confirms live polling/SSE updates render
+  correctly.
+- `device-03-scrubbed.png` — after tapping the scrubber's prev arrow once. Header switches to
+  "VIEWING BLOCK", block stays at 24,152,811, "MINED AT 15:16:24", "1 behind tip" — exactly the
+  expected scrub behavior.
+- `device-04-live-again.png` — after tapping next repeatedly to catch up. Because mainnet was
+  producing blocks faster than the 15 s target during this window (several consecutive ~15–25 s
+  blocks), a single "next" tap only advances one block, so it briefly re-showed "3 behind tip"
+  and then "1 behind tip" before catching the tip; confirmed back at LIVE (green pill,
+  "SCRUB BLOCKS · TIP", height 24,152,818). This is correct incremental-scrub behavior, not a
+  bug — the brief's assumption that one tap always returns to live only holds when no new block
+  lands between the prev and next taps.
+- Airplane-mode toggle (`device-05`..`device-07`, expected RECONNECTING/STALE): **skipped**.
+  `adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true` returned
+  `SecurityException: Permission Denial: not allowed to send broadcast ... from uid=2000` — this
+  non-rooted Android 9 device's shell user cannot toggle the actual radio state (only the
+  Settings app/system UID may send that protected broadcast). `settings put global
+  airplane_mode_on 1` alone does not change connectivity, so it was reverted to `0` immediately
+  without exercising RECONNECTING/STALE. This matches the brief's anticipated failure mode
+  ("if the broadcast is denied on this device, say so and skip").
+
+**Logcat:** `adb logcat -d | grep -i -E "flutter|timechain|exception|overflow"` showed no Dart
+exceptions, no `FATAL EXCEPTION`/`AndroidRuntime` crash, and no `RenderFlex overflow`. The only
+finding was a benign, pre-existing `flutter_svg` parse warning —
+`unhandled element <style/>; Picture key: Svg loader` — which also appears identically during
+`flutter test` (an asset SVG contains a `<style>` tag flutter_svg doesn't support); cosmetic,
+not a crash.
+
+**Verification:** `flutter analyze` — no issues. `flutter test` — 60/60 passed.
+
+**iOS:** not run (this box is Linux; iOS builds require a Mac). Deferred per Task 13 scope.
+
+**Cleanup:** `flutter run` process killed, backend (`node src/server.js`) stopped, SSH RPC
+tunnel to the Adam VPS closed. Airplane mode left OFF.
