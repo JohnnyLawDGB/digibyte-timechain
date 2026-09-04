@@ -9,6 +9,7 @@ import 'package:digibyte_timechain/data/chain_api.dart';
 import 'package:digibyte_timechain/data/chain_repository.dart';
 import 'package:digibyte_timechain/state/providers.dart';
 import 'package:digibyte_timechain/ui/dial/dial.dart';
+import 'package:digibyte_timechain/ui/screens/dial_screen.dart';
 import 'package:digibyte_timechain/state/settings.dart';
 import '../../fixtures/fixtures.dart';
 
@@ -20,6 +21,7 @@ void main() {
     repo = MockRepo(); tips = StreamController<TipUpdate>.broadcast();
     when(() => repo.watchTip()).thenAnswer((_) => tips.stream);
     when(() => repo.fetchBlock(24151774)).thenAnswer((_) async => blockFixture().copyWith(height: 24151774));
+    when(() => repo.refreshNow()).thenAnswer((_) async {});
     SharedPreferences.setMockInitialValues({});
   });
 
@@ -105,6 +107,22 @@ void main() {
     tips.add(TipUpdate(tipFixture(), FeedStatus.reconnecting)); await t.pump();
     expect(find.text('RECONNECTING'), findsOneWidget);
   });
+  testWidgets('resuming from the background refreshes the tip and restarts the tick', (t) async {
+    await pumpApp(t);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live)); await t.pump();
+    final c = ProviderScope.containerOf(t.element(find.byType(DialScreen)));
+    for (final s in [AppLifecycleState.inactive, AppLifecycleState.hidden, AppLifecycleState.paused]) {
+      t.binding.handleAppLifecycleStateChanged(s); await t.pump();
+    }
+    expect(c.read(appResumedProvider), isFalse);
+    verifyNever(() => repo.refreshNow());
+    for (final s in [AppLifecycleState.hidden, AppLifecycleState.inactive, AppLifecycleState.resumed]) {
+      t.binding.handleAppLifecycleStateChanged(s); await t.pump();
+    }
+    expect(c.read(appResumedProvider), isTrue);
+    verify(() => repo.refreshNow()).called(1);
+  });
+
   testWidgets('settings toggles the theme', (t) async {
     await t.binding.setSurfaceSize(const Size(390, 1200));
     await pumpApp(t);

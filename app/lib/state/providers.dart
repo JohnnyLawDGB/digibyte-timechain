@@ -34,8 +34,14 @@ final selectedSnapshotProvider = FutureProvider<ChainSnapshot>((ref) async {
   return ref.watch(chainRepositoryProvider).fetchBlock(h);
 });
 
-/// One tick per second for the block timer.
-final nowProvider = StreamProvider<DateTime>((_) => _tickingNow());
+/// False whenever the app is not in the foreground. Driven by the lifecycle
+/// listener in [TimechainApp].
+final appResumedProvider = StateProvider<bool>((_) => true);
+
+/// One tick per second for the block timer — but only while the app is resumed.
+/// A backgrounded app would otherwise rebuild the whole dial once a second for
+/// nobody; it still emits once so a paused frame shows a sane time.
+final nowProvider = StreamProvider<DateTime>((ref) => ref.watch(appResumedProvider) ? _tickingNow() : Stream.value(DateTime.now()));
 
 Stream<DateTime> _tickingNow() async* {
   yield DateTime.now();

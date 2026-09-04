@@ -9,6 +9,19 @@ import '../fixtures/fixtures.dart';
 class MockRepo extends Mock implements ChainRepository {}
 
 void main() {
+  test('nowProvider ticks while resumed and stops while the app is backgrounded', () async {
+    final paused = ProviderContainer(overrides: [appResumedProvider.overrideWith((_) => false)]);
+    final off = <DateTime>[];
+    final s1 = paused.listen(nowProvider, (_, n) { if (n.value != null) off.add(n.value!); });
+    final running = ProviderContainer();
+    final on = <DateTime>[];
+    final s2 = running.listen(nowProvider, (_, n) { if (n.value != null) on.add(n.value!); });
+    await Future<void>.delayed(const Duration(milliseconds: 2200));
+    expect(off.length, 1, reason: 'a backgrounded app must not rebuild the dial once a second');
+    expect(on.length, greaterThan(1));
+    s1.close(); paused.dispose(); s2.close(); running.dispose();
+  });
+
   test('selectedSnapshot follows the tip when live and fetches a block when scrubbed', () async {
     final repo = MockRepo();
     final tips = StreamController<TipUpdate>.broadcast();
