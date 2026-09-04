@@ -28,6 +28,7 @@ class ChainRepository {
   StreamSubscription<SseEvent>? _sseSub;
   Timer? _poll;
   ChainSnapshot? _last;
+  bool _polling = false;
   final _blocks = <int, ChainSnapshot>{};
   static const _maxBlocks = 512;
 
@@ -62,12 +63,16 @@ class ChainRepository {
   }
 
   Future<void> _pollOnce() async {
+    if (_polling) return;                  // never overlap: a slow poll must not race a newer one
+    _polling = true;
     try {
       _last = await _api.fetchTip();
       await _cache.save(_last!);
       _emit(FeedStatus.live);
     } catch (_) {
       if (_last != null) _emit(FeedStatus.reconnecting);
+    } finally {
+      _polling = false;
     }
   }
 
@@ -76,7 +81,7 @@ class ChainRepository {
       final json = jsonDecode(e.data) as Map<String, dynamic>;
       if (e.event == 'tip') {
         _last = ChainSnapshot.fromJson(json);
-        _cache.save(_last!);
+        unawaited(_cache.save(_last!).catchError((_) {}));
         _emit(FeedStatus.live);
       } else if (e.event == 'mempool' && _last != null) {
         final p = MempoolPatch.fromJson(json);

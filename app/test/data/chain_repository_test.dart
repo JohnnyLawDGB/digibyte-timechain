@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:digibyte_timechain/data/chain_api.dart';
 import 'package:digibyte_timechain/data/chain_repository.dart';
+import 'package:digibyte_timechain/data/models/chain_snapshot.dart';
 import 'package:digibyte_timechain/data/snapshot_cache.dart';
 import 'package:digibyte_timechain/data/sse_client.dart';
 import '../fixtures/fixtures.dart';
@@ -66,6 +67,22 @@ void main() {
     final before = calls;
     await Future<void>.delayed(const Duration(milliseconds: 80));
     expect(calls, before);
+    await sub.cancel(); repo.dispose();
+  });
+
+  test('polls never overlap: a slow fetch suppresses the next tick', () async {
+    final gate = Completer<ChainSnapshot>();
+    var calls = 0;
+    when(() => api.fetchTip()).thenAnswer((_) { calls++; return gate.future; });
+    final repo = ChainRepository(api: api, sse: sse, cache: cache, pollInterval: const Duration(milliseconds: 30));
+    final got = <TipUpdate>[]; final sub = repo.watchTip().listen(got.add);
+    sse.set(SseState.disconnected);
+    await Future<void>.delayed(const Duration(milliseconds: 100));   // ~3 ticks while the first fetch is still pending
+    expect(calls, 1);
+    gate.complete(tipFixture());
+    await Future<void>.delayed(const Duration(milliseconds: 50));     // the pending poll resolves, the next tick polls again
+    expect(calls, greaterThanOrEqualTo(2));
+    expect(got.first.status, FeedStatus.live);
     await sub.cancel(); repo.dispose();
   });
 
