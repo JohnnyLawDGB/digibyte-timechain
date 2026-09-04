@@ -48,7 +48,7 @@ DigiByte differs from Bitcoin in ways that make a literal copy wrong:
 
 | Bitcoin concept on the reference site | DigiByte reality | What we show instead |
 |---|---|---|
-| Halving every 210,000 blocks | Subsidy falls 1% every 10,080 blocks (~monthly) | "Blocks to next reduction" ring |
+| Halving every 210,000 blocks | Subsidy falls 1.116% every 175,200 blocks (one "month" = 2,628,000 s / 15 s; Core `GetBlockSubsidy` Period VI, verified 2026-09-04) | "Blocks to next reduction" ring |
 | Epoch (halving era) | Reduction step number | "Reduction #N" in the header |
 | Difficulty adjust every 2016 blocks | DigiShield retargets every block, per algorithm | Algorithm-share ring |
 | 21M cap | 21B cap, reached ~2035 | Supply as % of 21B |
@@ -59,9 +59,11 @@ DigiByte differs from Bitcoin in ways that make a literal copy wrong:
 
 1. **Supply ring.** Full circle = 21,000,000,000 DGB. Arc = minted so far.
    Marker label: supply in billions and % of cap.
-2. **Reward-reduction ring.** Full circle = 10,080 blocks. Arc = blocks
-   elapsed in the current cycle. Marker label: blocks remaining until the
-   next 1% subsidy cut.
+2. **Reward-reduction ring.** Full circle = 175,200 blocks. Arc = blocks
+   elapsed in the current cycle, counted from the Period VI origin at height
+   1,430,000. Marker label: blocks remaining until the next 1.116% subsidy
+   cut. Verified: at height 24,151,775 the chain is in reduction step 130
+   and the next cut lands at height 24,206,000.
 3. **Algorithm ring.** Five arcs proportional to each algorithm's share of
    blocks in the last 24 h (5,760 blocks). Colors fixed per algorithm:
    SHA256d, Scrypt, Skein, Qubit, Odocrypt. Legend on tap.
@@ -80,10 +82,10 @@ band, block size in MB, tx count, an "open in DigiScope explorer" link.
 
 Header (left): subsidy per block, supply + % of 21B.
 Header (right): USD per DGB, DGB per USD, market cap USD.
-Header (top-left): "Reduction #N" where N counts 10,080-block steps since
-the reduction schedule began. The exact origin height is a backend
-constant and must be verified against Core's `GetBlockSubsidy` during
-implementation (see §8).
+Header (top-left): "Reduction #N" where N = floor((height − 1,430,000) ×
+15 / 2,628,000) + 1, matching Core's integer `months` loop. Origin height
+1,430,000 (`workComputationChangeTarget`) and the 98884/100000 decay
+factor are verified against `GetBlockSubsidy` in `src/validation.cpp`.
 
 ### 4.3 Tiles below the dial
 
@@ -133,7 +135,7 @@ PriceSource: reuse DigiScope's existing price fetch (verify in impl, §8)
 ```
 
 SnapshotBuilder RPC calls per block: `getblockchaininfo`, `getblock <hash> 2`
-(for coinbase, size, tx count, algorithm), `getblockstats <height>` (fee
+(for coinbase, size, tx count, and the `pow_algo` field, verified present on v9.26.4), `getblockstats <height>` (fee
 percentiles, total fees, subsidy), `gettxoutsetinfo` is NOT called per block
 (too slow); supply is computed from the subsidy schedule and cross-checked
 once at startup.
@@ -151,7 +153,7 @@ the vsize of blocks mined in the window.
   "feeRate": {"median": 4.1, "min": 1.0, "max": 302.0},
   "reward": {"subsidy": 241.7, "fees": 1.23, "total": 242.93},
   "pool": {"tag": "F2Pool", "raw": "…"},
-  "reduction": {"step": 118, "blocksUntilNext": 4021, "cycle": 10080},
+  "reduction": {"step": 130, "blocksUntilNext": 54225, "cycle": 175200},
   "supply": {"total": 17650000000, "cap": 21000000000},
   "algoShare24h": {"sha256d": 0.2, "scrypt": 0.2, "skein": 0.2, "qubit": 0.2, "odocrypt": 0.2},
   "recentBlocks": [{"height": 24123456, "algo": "scrypt", "sizeBytes": 123456}, …240],
@@ -202,10 +204,13 @@ Backend:
 - Route tests (jest + supertest) against a mocked RPC client: tip, block,
   stream framing, 503 path.
 - Snapshot builder unit tests with recorded RPC fixtures from mainnet.
-- Verification tasks in the plan: confirm the reduction schedule constants
-  against Core's `GetBlockSubsidy`; confirm the node exposes per-block
-  `pow_algo` in `getblock` and `getblockstats` is available (index needs);
-  confirm DigiScope's existing price source and its refresh interval.
+- Verified 2026-09-04 against Core source and the Adam VPS mainnet node:
+  reduction schedule constants (§4), `pow_algo` in `getblock`, and
+  `getblockstats` (returns subsidy, totalfee, min/max feerate). Still to
+  confirm in the plan: DigiScope's existing price source and its refresh
+  interval; the fee unit shown to users (DGB fee rates run 110–11,000
+  sat/vB because Core's relay floor is 0.001 DGB/kB, so sat/vB may read
+  oddly — decide between sat/vB and DGB/kB during implementation).
 
 Flutter:
 - Unit tests for `reduction_schedule`, `ring_math`, `formatters`.
