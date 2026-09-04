@@ -13,7 +13,10 @@ class BlockNotFound extends ChainApiException { BlockNotFound() : super(404, 'bl
 class ChainWarmingUp extends ChainApiException { ChainWarmingUp() : super(503, 'chain data warming up'); }
 
 class ChainApi {
-  ChainApi({required Uri base, http.Client? client}) : _base = base, _client = client ?? http.Client();
+  /// A base with a trailing slash ('.../api/') would otherwise build '.../api//chain/tip'.
+  ChainApi({required Uri base, http.Client? client})
+      : _base = base.replace(path: base.path.endsWith('/') ? base.path.substring(0, base.path.length - 1) : base.path),
+        _client = client ?? http.Client();
   final Uri _base;
   final http.Client _client;
 
@@ -25,7 +28,13 @@ class ChainApi {
 
   Future<ChainSnapshot> _get(String path) async {
     final res = await _client.get(_u(path)).timeout(const Duration(seconds: 15));
-    if (res.statusCode == 200) return ChainSnapshot.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+    if (res.statusCode == 200) {
+      // A captive portal or a proxy error page can answer 200 with HTML.
+      final Object? body;
+      try { body = jsonDecode(res.body); } catch (_) { throw ChainApiException(200, 'malformed response'); }
+      if (body is! Map<String, dynamic>) throw ChainApiException(200, 'malformed response');
+      return ChainSnapshot.fromJson(body);
+    }
     String msg = res.body;
     try { msg = (jsonDecode(res.body) as Map<String, dynamic>)['error']?.toString() ?? msg; } catch (_) {}
     if (res.statusCode == 404 && path.startsWith('chain/block/')) throw BlockNotFound();
