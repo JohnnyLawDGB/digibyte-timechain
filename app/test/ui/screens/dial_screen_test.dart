@@ -57,10 +57,16 @@ void main() {
     await t.binding.setSurfaceSize(const Size(390, 1200));
     await pumpApp(t);
     tips.add(TipUpdate(tipFixture(), FeedStatus.live)); await t.pump();
+    expect(t.widget<MaterialApp>(find.byType(MaterialApp)).themeMode, ThemeMode.dark);
     await t.tap(find.byIcon(Icons.settings)); await t.pumpAndSettle();
     await t.tap(find.text('Light')); await t.pumpAndSettle();
     final app = t.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(app.themeMode, ThemeMode.light);
     expect(app.theme!.brightness, Brightness.light);
     expect(find.text('USD'), findsOneWidget);
+    await t.tap(find.text('System')); await t.pumpAndSettle();
+    final app2 = t.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(app2.themeMode, ThemeMode.system);
+    expect(app2.darkTheme!.brightness, Brightness.dark);
   });
 }
