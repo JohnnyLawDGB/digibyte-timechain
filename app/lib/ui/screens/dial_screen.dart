@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../config.dart';
+import '../../data/chain_api.dart';
 import '../../data/chain_repository.dart';
 import '../../data/models/chain_snapshot.dart';
 import '../../domain/formatters.dart';
@@ -19,11 +20,26 @@ import '../tiles/reward_tile.dart';
 import '../widgets/status_pill.dart';
 import 'settings_screen.dart';
 
-class DialScreen extends ConsumerWidget {
+class DialScreen extends ConsumerStatefulWidget {
   const DialScreen({super.key});
+  @override
+  ConsumerState<DialScreen> createState() => _DialScreenState();
+}
+
+class _DialScreenState extends ConsumerState<DialScreen> {
+  /// The last snapshot that actually reached the screen. A failed block fetch
+  /// keeps showing this, frozen, instead of quietly redrawing the live tip
+  /// under a VIEWING BLOCK pill while the tip keeps advancing underneath it.
+  ChainSnapshot? _lastRendered;
+
+  static String _blockErrorText(Object e) => switch (e) {
+    BlockNotFound() => 'That block is not available.',
+    ChainWarmingUp() => 'The chain feed is warming up, try again shortly.',
+    _ => 'Could not load that block.',
+  };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final p = context.palette;
     final tip = ref.watch(tipUpdateProvider);
     final selected = ref.watch(selectedSnapshotProvider);
@@ -34,7 +50,7 @@ class DialScreen extends ConsumerWidget {
       backgroundColor: p.bg,
       body: SafeArea(child: tip.when(
         loading: () => _message(context, 'Connecting to the chain…'),
-        error: (e, _) => _message(context, 'Could not reach the chain feed.\n$e'),
+        error: (e, _) => _message(context, 'Could not reach the chain feed.'),
         // In live mode, `selected` briefly reports `loading` for one microtask hop after
         // each tip update (FutureProvider re-resolving) even though its eventual value
         // is exactly `u.snapshot`; using the real `isLive` here (rather than hardcoding
@@ -42,12 +58,21 @@ class DialScreen extends ConsumerWidget {
         // When scrubbed, `isLive` is already false, so this is a no-op for that path.
         data: (u) => selected.when(
           loading: () => _body(context, ref, u, u.snapshot, isLive: isLive, now: now, loadingBlock: true),
-          error: (e, _) => _body(context, ref, u, u.snapshot, isLive: isLive, now: now, blockError: e.toString()),
-          data: (s) => _body(context, ref, u, s, isLive: isLive, now: now),
+          error: (e, _) {
+            final last = _lastRendered;
+            if (last == null) return _errorCard(context, ref, _blockErrorText(e));
+            return _body(context, ref, u, last, isLive: isLive, now: now, blockError: _blockErrorText(e));
+          },
+          data: (s) { _lastRendered = s; return _body(context, ref, u, s, isLive: isLive, now: now); },
         ),
       )),
     );
   }
+
+  Widget _errorCard(BuildContext context, WidgetRef ref, String text) => Center(child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [
+    Text(text, textAlign: TextAlign.center, style: TextStyle(color: context.palette.muted)),
+    TextButton(key: const Key('scrub-retry'), onPressed: () => ref.invalidate(selectedSnapshotProvider), child: const Text('Retry')),
+  ])));
 
   Widget _message(BuildContext context, String text) => Center(child: Padding(padding: const EdgeInsets.all(32), child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: context.palette.muted))));
 
@@ -77,7 +102,7 @@ class DialScreen extends ConsumerWidget {
       const SizedBox(height: 20),
       Center(child: Opacity(opacity: loadingBlock ? 0.5 : 1, child: Dial(snapshot: s, onOpenExplorer: () => _copyExplorer(context, s.height)))),
       if (blockError != null) Padding(padding: const EdgeInsets.only(top: 8), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Flexible(child: Text('Could not load that block.', style: TextStyle(color: const Color(0xFFF5A524), fontSize: 12))),
+        Flexible(child: Text(blockError, style: const TextStyle(color: Color(0xFFF5A524), fontSize: 12))),
         TextButton(key: const Key('scrub-retry'), onPressed: () => ref.invalidate(selectedSnapshotProvider), child: const Text('Retry')),
       ])),
       const SizedBox(height: 14),
