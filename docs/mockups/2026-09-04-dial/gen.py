@@ -98,7 +98,7 @@ def dial_svg(t, sel_height, sel_index):
         a = e
     # captions
     cap_fill = t["muted"]
-    for pid, txt in (("cap1", "SUPPLY OF 21B"), ("cap2", "BLOCKS TO NEXT CUT"), ("cap3", "ALGO SHARE · LAST 240")):
+    for pid, txt in (("cap1", "SUPPLY OF 21B"), ("cap2", "CYCLE TO NEXT CUT"), ("cap3", "ALGO SHARE · LAST 240")):
         out.append(f'<text font-family="Space Grotesk, system-ui, sans-serif" font-size="8.5" font-weight="700" letter-spacing="1.2" fill="{cap_fill}"><textPath href="#{pid}">{txt}</textPath></text>')
     # ring 4 ticks: newest at 12 o'clock, clockwise = older
     for i, (h, algo, size, ntx, tm) in enumerate(blocks):
@@ -119,7 +119,7 @@ def dial_svg(t, sel_height, sel_index):
     out.append('</svg>')
     # pills (HTML, positioned)
     pills = []
-    for r, e, txt in ((158, end1, f"{supply_frac*100:.1f}%"), (140, end2, f"{fmt(to_go)} blocks")):
+    for r, e, txt in ((158, end1, f"{supply_frac*100:.1f}%"), (140, end2, f"{frac*100:.1f}%")):
         x, y = pt(r, e)
         # push the pill outward from the ring so it does not cover the dot
         ox, oy = pt(r + 18, e)
@@ -144,9 +144,9 @@ def page(theme, live, sel_index):
     dt = datetime.datetime.fromtimestamp(tm, datetime.UTC)
     # block-specific figures (verified from getblockstats)
     if h == 24151775:
-        fees, fee_med, fee_min, fee_max = 0.0, "—", "—", "—"
+        fees, fee_med, fee_min, fee_max = 0.0, "—", "—", "—"  # empty block: no fee-paying tx
     elif h == 24151710:
-        fees, fee_med, fee_min, fee_max = 0.64499045, "10,003", "110", "11,020"
+        fees, fee_med, fee_min, fee_max = 0.64499045, "0.1000", "0.0011", "0.1102"  # sat/vB ÷ 1e5
     else:
         raise SystemExit("no stats for that block")
     reward = SUBSIDY + fees
@@ -218,7 +218,8 @@ def page(theme, live, sel_index):
         <span style="width:8px;height:8px;border-radius:2px;background:{acol};display:inline-block"></span>
         <span style="font-size:11px;font-weight:700;letter-spacing:1.4px;color:{acol}">{alabel.upper()}</span>
       </div>
-      <div style="font-family:JetBrains Mono, monospace;font-size:11.5px;font-weight:600;color:{t['text']};margin-top:2px;white-space:nowrap">{fee_med} <span style="color:{t['muted']};font-weight:500">sat/vB</span> <span style="color:{t['muted']};font-weight:500">[{fee_min} – {fee_max}]</span></div>
+      <div style="font-family:JetBrains Mono, monospace;font-size:12px;font-weight:600;color:{t['text']};margin-top:2px;white-space:nowrap">{fee_med} <span style="color:{t['muted']};font-weight:500">DGB/kB</span></div>
+      <div style="font-family:JetBrains Mono, monospace;font-size:10.5px;font-weight:500;color:{t['muted']};white-space:nowrap">min {fee_min} · max {fee_max}</div>
       <div style="font-family:JetBrains Mono, monospace;font-size:12px;font-weight:600;color:{t['text']}">{size:,} B <span style="color:{t['muted']};font-weight:500">·</span> {ntx} tx</div>
       <a href="#" style="display:flex;align-items:center;justify-content:center;width:44px;height:32px;color:{t['muted']}">{EXT}</a>
     </div>
@@ -263,11 +264,11 @@ def page(theme, live, sel_index):
   <div style="background:{t['card']};border:1px solid {t['line']};border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:{t['shadow']}">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div style="font-size:10px;font-weight:700;letter-spacing:1.6px;color:{t['muted']}">FEE RATES</div>
-      <div style="font-size:10px;font-weight:500;color:{t['muted']}">sat/vB</div>
+      <div style="font-size:10px;font-weight:500;color:{t['muted']}">DGB / kB</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px">
-      <div style="background:{t['card2']};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><div style="font-size:9px;font-weight:700;letter-spacing:1.2px;color:{t['muted']}">PRIORITY</div><div style="font-family:JetBrains Mono, monospace;font-size:20px;font-weight:700">1,100</div><div style="font-size:9.5px;color:{t['muted']}">next 2 blocks · ~30 s</div></div>
-      <div style="background:{t['card2']};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><div style="font-size:9px;font-weight:700;letter-spacing:1.2px;color:{t['muted']}">ANYTIME</div><div style="font-family:JetBrains Mono, monospace;font-size:20px;font-weight:700">110</div><div style="font-size:9.5px;color:{t['muted']}">within 20 blocks · ~5 min</div></div>
+      <div style="background:{t['card2']};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><div style="font-size:9px;font-weight:700;letter-spacing:1.2px;color:{t['muted']}">PRIORITY</div><div style="font-family:JetBrains Mono, monospace;font-size:20px;font-weight:700">0.011</div><div style="font-size:9.5px;color:{t['muted']}">next 2 blocks · ~30 s</div></div>
+      <div style="background:{t['card2']};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><div style="font-size:9px;font-weight:700;letter-spacing:1.2px;color:{t['muted']}">ANYTIME</div><div style="font-family:JetBrains Mono, monospace;font-size:20px;font-weight:700">0.0011</div><div style="font-size:9.5px;color:{t['muted']}">within 20 blocks · ~5 min</div></div>
     </div>
     <div style="height:1px;background:{t['line']}"></div>
     <div style="display:flex;align-items:center;justify-content:space-between">
@@ -313,9 +314,9 @@ canvas = {
     ],
     "annotations": [
         {"id": "data-note", "x": 0, "y": -150, "w": 460,
-         "text": "All figures are real DigiByte mainnet data captured 2026-09-04 from our node: height 24,151,775, subsidy 253.56 DGB, supply 18.46B (87.9% of 21B), reduction step #130, last 240 blocks by algorithm. Sample values: fee-rate estimates (Priority/Anytime) and the 9 s timer."},
+         "text": "All figures are real DigiByte mainnet data captured 2026-09-04 from our node: height 24,151,775, subsidy 253.56 DGB, supply 18.46B (87.9% of 21B), reduction step #130, last 240 blocks by algorithm. Sample values: fee-rate estimates (Priority/Anytime) and the 9 s timer. Fees are shown in DGB per kB, Core's native unit."},
         {"id": "rings-note", "x": 960, "y": -150, "w": 400,
-         "text": "Rings, outer to inner: supply of 21B cap; blocks to next 1.116% subsidy cut (175,200-block cycle); algorithm share of the last 240 blocks; one tick per block for the last hour, length = block size. DigiShield retargets every block, so there is no difficulty ring."},
+         "text": "Rings, outer to inner: supply of 21B cap; percent of the 175,200-block cycle to the next 1.116% subsidy cut; algorithm share of the last 240 blocks; one tick per block for the last hour, length = block size. DigiShield retargets every block, so there is no difficulty ring."},
     ],
     "launch": {"view": "canvas"},
 }

@@ -31,14 +31,14 @@
       "x": 0,
       "y": -150,
       "w": 460,
-      "text": "All figures are real DigiByte mainnet data captured 2026-09-04 from our node: height 24,151,775, subsidy 253.56 DGB, supply 18.46B (87.9% of 21B), reduction step #130, last 240 blocks by algorithm. Sample values: fee-rate estimates (Priority/Anytime) and the 9 s timer."
+      "text": "All figures are real DigiByte mainnet data captured 2026-09-04 from our node: height 24,151,775, subsidy 253.56 DGB, supply 18.46B (87.9% of 21B), reduction step #130, last 240 blocks by algorithm. Sample values: fee-rate estimates (Priority/Anytime) and the 9 s timer. Fees are shown in DGB per kB, Core's native unit."
     },
     {
       "id": "rings-note",
       "x": 960,
       "y": -150,
       "w": 400,
-      "text": "Rings, outer to inner: supply of 21B cap; blocks to next 1.116% subsidy cut (175,200-block cycle); algorithm share of the last 240 blocks; one tick per block for the last hour, length = block size. DigiShield retargets every block, so there is no difficulty ring."
+      "text": "Rings, outer to inner: supply of 21B cap; percent of the 175,200-block cycle to the next 1.116% subsidy cut; algorithm share of the last 240 blocks; one tick per block for the last hour, length = block size. DigiShield retargets every block, so there is no difficulty ring."
     }
   ],
   "launch": {
