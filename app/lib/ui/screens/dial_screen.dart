@@ -73,7 +73,7 @@ class DialScreen extends ConsumerWidget {
         IconButton(icon: const Icon(Icons.settings), color: p.muted, onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()))),
       ])),
       const SizedBox(height: 14),
-      HeaderStats(snapshot: s, isLive: isLive),
+      HeaderStats(snapshot: isLive ? s : s.copyWith(price: u.snapshot.price), isLive: isLive),
       const SizedBox(height: 20),
       Center(child: Opacity(opacity: loadingBlock ? 0.5 : 1, child: Dial(snapshot: s, onOpenExplorer: () => _copyExplorer(context, s.height)))),
       if (blockError != null) Padding(padding: const EdgeInsets.only(top: 8), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [

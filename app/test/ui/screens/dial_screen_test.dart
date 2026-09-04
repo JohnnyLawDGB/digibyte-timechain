@@ -44,6 +44,18 @@ void main() {
     expect(find.text('VIEWING BLOCK'), findsOneWidget);
     expect(find.text('24,151,774'), findsOneWidget);
     expect(find.text('1 behind tip'), findsOneWidget);
+    // The header price is a live figure, not a per-block one: scrubbing must not blank it.
+    expect(find.text('0.00469'), findsOneWidget);
+  });
+
+  testWidgets('renders the live dial on a 360 dp phone without overflowing', (t) async {
+    await t.binding.setSurfaceSize(const Size(360, 1400));
+    await pumpApp(t);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live));
+    await t.pump();
+    expect(t.takeException(), isNull);
+    expect(find.text('24,151,775'), findsOneWidget);
+    await t.binding.setSurfaceSize(null);
   });
   testWidgets('stale and reconnecting badges', (t) async {
     await t.binding.setSurfaceSize(const Size(390, 1200));
