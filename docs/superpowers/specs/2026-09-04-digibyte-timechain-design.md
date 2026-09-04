@@ -53,7 +53,7 @@ DigiByte differs from Bitcoin in ways that make a literal copy wrong:
 | Difficulty adjust every 2016 blocks | DigiShield retargets every block, per algorithm | Algorithm-share ring |
 | 21M cap | 21B cap, reached ~2035 | Supply as % of 21B |
 | ~10-minute blocks, 144/day | 15-second target, ~5,760/day | Recent-blocks ring covers 240 blocks (~1 h) |
-| sats/vB | sat/vB (DGB has segwit) | Same unit, same label |
+| sats/vB | Core quotes fees in DGB/kB and the relay floor is 0.001 DGB/kB, so sat/vB reads 110–11,000 | DGB per kB, 4 significant digits (decided 2026-09-04) |
 
 ### 4.1 Rings (outer to inner)
 
@@ -61,8 +61,9 @@ DigiByte differs from Bitcoin in ways that make a literal copy wrong:
    Marker label: supply in billions and % of cap.
 2. **Reward-reduction ring.** Full circle = 175,200 blocks. Arc = blocks
    elapsed in the current cycle, counted from the Period VI origin at height
-   1,430,000. Marker label: blocks remaining until the next 1.116% subsidy
-   cut. Verified: at height 24,151,775 the chain is in reduction step 130
+   1,430,000. Marker label: percent of the cycle elapsed (decided 2026-09-04);
+   the blocks-remaining count and days estimate live in the "Next cut"
+   tile below the dial. Verified: at height 24,151,775 the chain is in reduction step 130
    and the next cut lands at height 24,206,000.
 3. **Algorithm ring.** Five arcs proportional to each algorithm's share of
    blocks in the last 24 h (5,760 blocks). Colors fixed per algorithm:
@@ -77,7 +78,7 @@ for that height; ring 3 keeps the live 24 h shares (documented in the UI as
 
 ### 4.2 Center and header
 
-Center: block height (large), fee rate median in sat/vB with `[min – max]`
+Center: block height (large), fee rate median in DGB/kB with min and max
 band, block size in MB, tx count, an "open in DigiScope explorer" link.
 
 Header (left): subsidy per block, supply + % of 21B.
@@ -94,7 +95,7 @@ factor are verified against `GetBlockSubsidy` in `src/validation.cpp`.
 - **Reward**: subsidy + tx fees = reward, with an algorithm badge and the
   pool tag from the coinbase string ("MINED BY → name"; "unknown" if no
   match).
-- **Fee rates**: Priority (next ~2 blocks) and Anytime (~20 blocks), sat/vB.
+- **Fee rates**: Priority (next ~2 blocks) and Anytime (~20 blocks), DGB/kB.
 - **Mempool**: inflow in vB/s, unconfirmed tx count, depth in blocks.
 - **Reserved tile**: hidden in v1, wired for DigiDollar supply + oracle
   consensus count in v1.1.
@@ -150,7 +151,7 @@ the vsize of blocks mined in the window.
 {
   "height": 24123456, "hash": "…", "time": 1788000000,
   "algo": "scrypt", "sizeBytes": 123456, "txCount": 87,
-  "feeRate": {"median": 4.1, "min": 1.0, "max": 302.0},
+  "feeRate": {"unit": "DGB/kB", "median": 0.10003, "min": 0.0011, "max": 0.1102},
   "reward": {"subsidy": 241.7, "fees": 1.23, "total": 242.93},
   "pool": {"tag": "F2Pool", "raw": "…"},
   "reduction": {"step": 130, "blocksUntilNext": 54225, "cycle": 175200},
@@ -158,7 +159,7 @@ the vsize of blocks mined in the window.
   "algoShare24h": {"sha256d": 0.2, "scrypt": 0.2, "skein": 0.2, "qubit": 0.2, "odocrypt": 0.2},
   "recentBlocks": [{"height": 24123456, "algo": "scrypt", "sizeBytes": 123456}, …240],
   "mempool": {"txCount": 1234, "vbytes": 456789, "inflowVbPerSec": 210.5, "depthBlocks": 0.5,
-              "fees": {"priority": 3.5, "anytime": 0.2}},
+              "fees": {"unit": "DGB/kB", "priority": 0.011, "anytime": 0.0011}},
   "price": {"usd": 0.0123, "marketCapUsd": 217000000, "asOf": 1788000000}
 }
 ```
@@ -208,9 +209,7 @@ Backend:
   reduction schedule constants (§4), `pow_algo` in `getblock`, and
   `getblockstats` (returns subsidy, totalfee, min/max feerate). Still to
   confirm in the plan: DigiScope's existing price source and its refresh
-  interval; the fee unit shown to users (DGB fee rates run 110–11,000
-  sat/vB because Core's relay floor is 0.001 DGB/kB, so sat/vB may read
-  oddly — decide between sat/vB and DGB/kB during implementation).
+  interval. Fee unit decided: DGB/kB everywhere (Core's native unit).
 
 Flutter:
 - Unit tests for `reduction_schedule`, `ring_math`, `formatters`.
