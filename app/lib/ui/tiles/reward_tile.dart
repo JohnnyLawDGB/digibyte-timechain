@@ -23,12 +23,12 @@ class RewardTile extends StatelessWidget {
       Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, color: p.track)),
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Text('MINED BY', style: kLabel.copyWith(fontSize: 9.5, letterSpacing: 1.2, color: p.muted)),
-        Row(children: [
-          Text(snapshot.pool.tag ?? 'unknown', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: p.text)),
+        Flexible(child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Flexible(child: Text(snapshot.pool.tag ?? 'unknown', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: p.text))),
           const SizedBox(width: 6),
           Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2), decoration: BoxDecoration(border: Border.all(color: algoColor), borderRadius: BorderRadius.circular(999)),
             child: Text((TimechainPalette.algoLabels[snapshot.algo] ?? snapshot.algo).toUpperCase(), style: kLabel.copyWith(fontSize: 9, letterSpacing: 1, color: algoColor))),
-        ]),
+        ])),
       ]),
     ]));
   }

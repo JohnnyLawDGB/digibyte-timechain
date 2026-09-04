@@ -42,6 +42,12 @@ void main() {
     await t.pumpWidget(host(RewardTile(snapshot: s)));
     expect(find.text('unknown'), findsOneWidget);
   });
+  testWidgets('RewardTile truncates a long pool tag instead of overflowing', (t) async {
+    final s = blockFixture().copyWith(pool: blockFixture().pool.copyWith(tag: 'a-very-long-pool-tag-that-would-never-fit-in-the-row-at-all-' * 2));
+    await t.pumpWidget(host(RewardTile(snapshot: s)));
+    expect(t.takeException(), isNull);
+    expect(find.byType(RewardTile), findsOneWidget);
+  });
   testWidgets('FeeMempoolCard shows DGB/kB estimates and mempool figures', (t) async {
     await t.pumpWidget(host(FeeMempoolCard(snapshot: tipFixture(), isLive: true)));
     expect(find.text('DGB / kB'), findsOneWidget);
