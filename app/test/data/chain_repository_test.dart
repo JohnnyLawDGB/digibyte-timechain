@@ -87,6 +87,23 @@ void main() {
     await sub.cancel(); repo.dispose();
   });
 
+  test('polls eagerly on subscribe and on every drop, not only on the tick', () async {
+    var calls = 0;
+    when(() => api.fetchTip()).thenAnswer((_) async { calls++; return tipFixture(); });
+    // A poll interval far longer than the test: anything that arrives came from
+    // an eager poll, never from the periodic timer.
+    final repo = ChainRepository(api: api, sse: sse, cache: cache, pollInterval: const Duration(minutes: 5));
+    final got = <TipUpdate>[]; final sub = repo.watchTip().listen(got.add);
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    expect(calls, 1, reason: 'subscribing must not wait for SSE to prove itself');
+    expect(got.map((u) => u.status), contains(FeedStatus.live));
+    sse.set(SseState.connected);
+    sse.set(SseState.disconnected);
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    expect(calls, 2, reason: 'a drop must poll now, not up to pollInterval later');
+    await sub.cancel(); repo.dispose();
+  });
+
   test('fetchBlock memoizes', () async {
     when(() => api.fetchBlock(24151710)).thenAnswer((_) async => blockFixture());
     final repo = ChainRepository(api: api, sse: sse, cache: cache);

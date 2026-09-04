@@ -44,6 +44,7 @@ class ChainRepository {
     _sse.state.addListener(_onSseState);
     _sseSub = _sse.events.listen(_onEvent);
     _onSseState();
+    unawaited(_pollOnce());   // don't make the first screen wait for SSE to prove itself
     _loadCached();
   }
 
@@ -56,11 +57,17 @@ class ChainRepository {
 
   void _onSseState() {
     if (_sse.state.value == SseState.disconnected) {
-      _poll ??= Timer.periodic(pollInterval, (_) => _pollOnce());
+      if (_poll != null) return;
+      _poll = Timer.periodic(pollInterval, (_) => _pollOnce());
+      unawaited(_pollOnce());   // the first tick is a whole pollInterval away; cover the gap now
     } else {
       _poll?.cancel(); _poll = null;
     }
   }
+
+  /// Refresh the tip right now (app resumed from the background, say).
+  /// A live SSE socket needs nothing more — its own watchdog covers dead ones.
+  Future<void> refreshNow() => _pollOnce();
 
   Future<void> _pollOnce() async {
     if (_polling) return;                  // never overlap: a slow poll must not race a newer one

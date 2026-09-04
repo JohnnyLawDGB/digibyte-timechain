@@ -44,6 +44,34 @@ void main() {
     expect(delays, [1]);
     client.close();
   });
+  test('an idle socket that never EOFs is dropped and reconnected by the watchdog', () async {
+    // One frame, then the connection stays open forever with nothing on it —
+    // the failure mode a dead NAT/proxy leaves behind. Without a watchdog the
+    // client sits in `connected` and the repository never falls back to polling.
+    var connects = 0;
+    final c = MockClient.streaming((req, body) async {
+      connects++;
+      final ctrl = StreamController<List<int>>();
+      ctrl.add(utf8.encode('event: tip\ndata: {"height":1}\n\n'));
+      return http.StreamedResponse(ctrl.stream, 200, headers: {'content-type': 'text/event-stream'});
+    });
+    final states = <SseState>[];
+    final client = SseClient(
+      uri: Uri.parse('http://x/stream'),
+      clientFactory: () => c,
+      backoff: (_) => const Duration(milliseconds: 1),
+      idleTimeout: const Duration(milliseconds: 100),
+      idleCheckInterval: const Duration(milliseconds: 20),
+    );
+    client.state.addListener(() => states.add(client.state.value));
+    final sub = client.events.listen((_) {});
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    expect(connects, greaterThanOrEqualTo(2), reason: 'states: $states');
+    expect(states, contains(SseState.disconnected));
+    await sub.cancel();
+    client.close();
+  });
+
   test('close() ends the stream and stops reconnecting', () async {
     var connects = 0;
     final c = scripted([[]], onConnect: (_) => connects++);
