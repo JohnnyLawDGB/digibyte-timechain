@@ -190,8 +190,7 @@ final theming) and the ClearBg DigiByte logo files used in the oracle repo.
 
 - SSE drop: exponential backoff 1 s → 30 s, and while disconnected poll
   `/api/chain/tip` every 10 s. UI shows a small "reconnecting" dot.
-- No network at launch: load last snapshot from local cache (Hive or a JSON
-  file), show "stale · 4m ago" badge.
+- No network at launch: load last snapshot from local cache (a JSON file in the app documents directory via path_provider), show "stale · 4m ago" badge.
 - Backend RPC failure: routes return 503 with `retryAfter`; the cached tip
   keeps serving until the node recovers; SSE keeps sending `ping`.
 - Scrub to a height that fails to build: tile shows an error state with
