@@ -29,10 +29,17 @@ void main() {
   });
   test('withPatch replaces mempool and price only', () {
     final s = tipFixture();
-    final p = MempoolPatch.fromJson({'height': 24151775, 'mempool': {'txCount': 7, 'vbytes': 900, 'inflowVbPerSec': 12.5, 'depthBlocks': 0.0, 'fees': {'unit': 'DGB/kB', 'priority': null, 'anytime': null}, 'asOf': 1}, 'price': null});
+    expect(s.price, isNotNull, reason: 'fixture guard: the tip carries a price to preserve');
+    const mempool = {'txCount': 7, 'vbytes': 900, 'inflowVbPerSec': 12.5, 'depthBlocks': 0.0, 'fees': {'unit': 'DGB/kB', 'priority': null, 'anytime': null}, 'asOf': 1};
+    // A mempool frame carries no price of its own; it must not wipe the tip's.
+    final p = MempoolPatch.fromJson({'height': 24151775, 'mempool': mempool, 'price': null});
     final s2 = s.withPatch(p);
-    expect(s2.mempool!.txCount, 7); expect(s2.mempool!.fees.priority, isNull); expect(s2.price, isNull);
+    expect(s2.mempool!.txCount, 7); expect(s2.mempool!.fees.priority, isNull);
+    expect(s2.price, s.price);
     expect(s2.height, s.height); expect(s2.recentBlocks, s.recentBlocks);
+    // A patch that does carry a price replaces it.
+    final p2 = MempoolPatch.fromJson({'height': 24151775, 'mempool': mempool, 'price': {'usd': 0.009, 'marketCapUsd': 1, 'asOf': 2, 'isStale': false}});
+    expect(s.withPatch(p2).price!.usd, 0.009);
   });
   test('round-trips through toJson', () {
     final s = tipFixture();

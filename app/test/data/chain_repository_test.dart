@@ -51,7 +51,8 @@ void main() {
     sse.ctrl.add(SseEvent('ping', '{}'));
     await Future<void>.delayed(const Duration(milliseconds: 20));
     expect(got.length, 2);
-    expect(got.last.snapshot.mempool!.txCount, 9); expect(got.last.snapshot.price, isNull); expect(got.last.snapshot.height, 24151775);
+    // The patch carries no price of its own, so the tip's price survives it.
+    expect(got.last.snapshot.mempool!.txCount, 9); expect(got.last.snapshot.price, got.first.snapshot.price); expect(got.last.snapshot.height, 24151775);
     await sub.cancel(); repo.dispose();
   });
 

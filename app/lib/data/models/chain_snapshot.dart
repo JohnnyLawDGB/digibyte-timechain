@@ -89,5 +89,7 @@ class ChainSnapshot with _$ChainSnapshot {
   }) = _ChainSnapshot;
   factory ChainSnapshot.fromJson(Map<String, dynamic> json) => _$ChainSnapshotFromJson(json);
 
-  ChainSnapshot withPatch(MempoolPatch p) => copyWith(mempool: p.mempool, price: p.price);
+  /// A `mempool` frame carries the mempool and, sometimes, a refreshed price.
+  /// A frame without a price says nothing about the price — keep the last one.
+  ChainSnapshot withPatch(MempoolPatch p) => copyWith(mempool: p.mempool ?? mempool, price: p.price ?? price);
 }
