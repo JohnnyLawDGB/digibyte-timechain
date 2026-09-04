@@ -38,20 +38,21 @@ class SseClient implements SseSource {
 
   @override
   Stream<SseEvent> get events {
-    _ctrl ??= StreamController<SseEvent>.broadcast(onListen: _run, onCancel: close);
+    _ctrl ??= StreamController<SseEvent>.broadcast(onListen: _start, onCancel: _stop);
     return _ctrl!.stream;
   }
 
+  void _start() {
+    _closed = false;
+    _run();
+  }
+
   Future<void> _run() async {
-    // The client is created once and reused across reconnect attempts: a
-    // fresh http.Client per attempt is unnecessary churn, and (per
-    // package:http's contract) a single Client is meant to be reused for
-    // many requests over its lifetime.
     var attempt = 0;
-    _client = _clientFactory();
     while (!_closed) {
       _state.value = SseState.connecting;
       try {
+        _client = _clientFactory();
         final res = await _client!.send(http.Request('GET', uri)..headers['Accept'] = 'text/event-stream');
         if (res.statusCode != 200) throw http.ClientException('HTTP ${res.statusCode}', uri);
         _state.value = SseState.connected;
@@ -62,6 +63,8 @@ class SseClient implements SseSource {
         }
       } catch (_) {
         // fall through to reconnect
+      } finally {
+        _client?.close(); _client = null;
       }
       if (_closed) break;
       _state.value = SseState.disconnected;
@@ -69,15 +72,19 @@ class SseClient implements SseSource {
       if (delay == null) break;
       await Future<void>.delayed(delay);
     }
+    _state.value = SseState.disconnected;
+  }
+
+  /// Last listener left: stop connecting, keep the controller so a later listen restarts.
+  void _stop() {
+    _closed = true;
     _client?.close(); _client = null;
     _state.value = SseState.disconnected;
   }
 
   @override
   void close() {
-    _closed = true;
-    _client?.close();
-    _state.value = SseState.disconnected;
+    _stop();
     final c = _ctrl; _ctrl = null;
     if (c != null && !c.isClosed) c.close();
   }

@@ -22,7 +22,8 @@ http.Client scripted(List<List<String>> connections, {List<bool>? fail, void Fun
 void main() {
   test('emits parsed events and reports connected/disconnected', () async {
     final states = <SseState>[];
-    final client = SseClient(uri: Uri.parse('http://x/stream'), clientFactory: () => scripted([['event: tip\ndata: {"height":1}\n\n', 'event: ping\ndata: {}\n\n']]), backoff: (_) => null);
+    final c = scripted([['event: tip\ndata: {"height":1}\n\n', 'event: ping\ndata: {}\n\n']]);
+    final client = SseClient(uri: Uri.parse('http://x/stream'), clientFactory: () => c, backoff: (_) => null);
     client.state.addListener(() => states.add(client.state.value));
     final events = await client.events.take(2).toList();
     expect(events.first.event, 'tip'); expect(events.first.data, '{"height":1}');
@@ -31,9 +32,10 @@ void main() {
   });
   test('reconnects after EOF and after a connection error with backoff', () async {
     final attempts = <int>[]; final delays = <int>[];
+    final c = scripted([[], ['event: tip\ndata: {"height":2}\n\n']], fail: [true, false], onConnect: attempts.add);
     final client = SseClient(
       uri: Uri.parse('http://x/stream'),
-      clientFactory: () => scripted([[], ['event: tip\ndata: {"height":2}\n\n']], fail: [true, false], onConnect: attempts.add),
+      clientFactory: () => c,
       backoff: (attempt) { delays.add(attempt); return attempt < 3 ? const Duration(milliseconds: 1) : null; },
     );
     final e = await client.events.first;
@@ -44,7 +46,8 @@ void main() {
   });
   test('close() ends the stream and stops reconnecting', () async {
     var connects = 0;
-    final client = SseClient(uri: Uri.parse('http://x/stream'), clientFactory: () => scripted([[]], onConnect: (_) => connects++), backoff: (_) => const Duration(milliseconds: 1));
+    final c = scripted([[]], onConnect: (_) => connects++);
+    final client = SseClient(uri: Uri.parse('http://x/stream'), clientFactory: () => c, backoff: (_) => const Duration(milliseconds: 1));
     final sub = client.events.listen((_) {});
     await Future<void>.delayed(const Duration(milliseconds: 20));
     client.close();
@@ -53,5 +56,20 @@ void main() {
     expect(connects, before);
     expect(client.state.value, SseState.disconnected);
     await sub.cancel();
+  });
+  test('re-subscribing after the last listener cancels reconnects', () async {
+    var connects = 0;
+    final c = scripted([[], []], onConnect: (_) => connects++);
+    final client = SseClient(uri: Uri.parse('http://x/stream'), clientFactory: () => c, backoff: (_) => null);
+    final sub1 = client.events.listen((_) {});
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await sub1.cancel();
+    expect(client.state.value, SseState.disconnected);
+    final before = connects;
+    final sub2 = client.events.listen((_) {});
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(connects, greaterThan(before));
+    await sub2.cancel();
+    client.close();
   });
 }
