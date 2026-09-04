@@ -1,0 +1,47 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "title": "Live \u00b7 Dark",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1160
+    },
+    {
+      "file": "Light.dc.html",
+      "title": "Live \u00b7 Light",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 1160
+    },
+    {
+      "file": "Scrubbed.dc.html",
+      "title": "Scrubbed 65 blocks back \u00b7 Dark",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 1160
+    }
+  ],
+  "annotations": [
+    {
+      "id": "data-note",
+      "x": 0,
+      "y": -150,
+      "w": 460,
+      "text": "All figures are real DigiByte mainnet data captured 2026-09-04 from our node: height 24,151,775, subsidy 253.56 DGB, supply 18.46B (87.9% of 21B), reduction step #130, last 240 blocks by algorithm. Sample values: fee-rate estimates (Priority/Anytime) and the 9 s timer."
+    },
+    {
+      "id": "rings-note",
+      "x": 960,
+      "y": -150,
+      "w": 400,
+      "text": "Rings, outer to inner: supply of 21B cap; blocks to next 1.116% subsidy cut (175,200-block cycle); algorithm share of the last 240 blocks; one tick per block for the last hour, length = block size. DigiShield retargets every block, so there is no difficulty ring."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}
