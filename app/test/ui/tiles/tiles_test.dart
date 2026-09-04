@@ -57,6 +57,10 @@ void main() {
     await t.pumpWidget(host(FeeMempoolCard(snapshot: blockFixture(), isLive: false)));
     expect(find.text('live · not block-specific'), findsOneWidget);
   });
+  testWidgets('FeeMempoolCard does not overflow at a 358px slot (390 minus 16px margins)', (t) async {
+    await t.pumpWidget(MaterialApp(theme: timechainTheme(TimechainPalette.dark), home: Scaffold(body: SizedBox(width: 358, child: FeeMempoolCard(snapshot: blockFixture(), isLive: false)))));
+    expect(t.takeException(), isNull);
+  });
   testWidgets('FooterStats and AlgoLegend', (t) async {
     await t.pumpWidget(host(Column(children: [FooterStats(snapshot: tipFixture(), isLive: true), AlgoLegend(snapshot: tipFixture())])));
     expect(find.text('18.46B'), findsOneWidget);

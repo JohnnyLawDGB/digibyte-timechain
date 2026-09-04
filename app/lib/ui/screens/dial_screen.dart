@@ -91,22 +91,7 @@ class DialScreen extends ConsumerWidget {
       const SizedBox(height: 14),
       Row(children: [BlockTimerTile(snapshot: s, now: now, isLive: isLive, blocksBehind: behind), const SizedBox(width: 12), Expanded(child: RewardTile(snapshot: s))]),
       const SizedBox(height: 14),
-      // FeeMempoolCard's internal title row is laid out flush against Card2's own
-      // padding; at the ListView's 16px horizontal inset it is ~9px too tight for the
-      // "live · not block-specific" label (see test/ui/tiles/tiles_test.dart, which
-      // passes at a full 390px). Rather than edit the reviewed tile, lay it out at a
-      // slightly wider fixed width and scale the whole card down (~3%, imperceptible)
-      // to fit this call site's slot. (A plain negative-Padding or bare OverflowBox
-      // both break — the tile's Column uses CrossAxisAlignment.stretch, which needs a
-      // finite width to resolve; FittedBox derives its own size from the already
-      // finite, width-constrained child, so it never reports an unbounded size.)
-      FittedBox(
-        fit: BoxFit.scaleDown,
-        child: SizedBox(
-          width: 372,
-          child: FeeMempoolCard(snapshot: isLive ? s : s.copyWith(mempool: u.snapshot.mempool), isLive: isLive),
-        ),
-      ),
+      FeeMempoolCard(snapshot: isLive ? s : s.copyWith(mempool: u.snapshot.mempool), isLive: isLive),
       const SizedBox(height: 14),
       FooterStats(snapshot: isLive ? s : s.copyWith(price: u.snapshot.price), isLive: isLive),
       const SizedBox(height: 12),
