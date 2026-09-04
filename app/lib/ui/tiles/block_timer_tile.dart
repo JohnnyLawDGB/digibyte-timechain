@@ -19,9 +19,10 @@ class BlockTimerTile extends StatelessWidget {
     final ringColor = over ? const Color(0xFFF5A524) : p.live;
     return SizedBox(width: 104, height: 104, child: Stack(alignment: Alignment.center, children: [
       CustomPaint(size: const Size.square(104), painter: _RingPainter(frac: frac, track: p.track, color: ringColor)),
-      Column(mainAxisSize: MainAxisSize.min, children: isLive
+      // The ring is 80 px across; scale the labels down rather than let them spill over it.
+      SizedBox(width: 68, child: FittedBox(fit: BoxFit.scaleDown, child: Column(mainAxisSize: MainAxisSize.min, children: isLive
         ? [Text('LAST BLOCK', style: kLabel.copyWith(fontSize: 9, color: p.muted)), Text(fmtElapsed(elapsed), style: kMono.copyWith(fontSize: 20, color: p.text)), Text('of 15s target', style: TextStyle(fontSize: 9, color: p.muted))]
-        : [Text('MINED AT', style: kLabel.copyWith(fontSize: 9, color: p.muted)), Text(fmtUtcTimeSec(snapshot.time), style: kMono.copyWith(fontSize: 15, color: p.text)), Text('$blocksBehind behind tip', style: TextStyle(fontSize: 9, color: p.muted))]),
+        : [Text('MINED AT', style: kLabel.copyWith(fontSize: 9, color: p.muted)), Text(fmtUtcTimeSec(snapshot.time), style: kMono.copyWith(fontSize: 15, color: p.text)), Text('$blocksBehind behind tip', style: TextStyle(fontSize: 9, color: p.muted))]))),
     ]));
   }
 }

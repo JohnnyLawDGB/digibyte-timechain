@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../data/models/chain_snapshot.dart';
 import '../../domain/formatters.dart';
@@ -14,17 +15,24 @@ class Dial extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final algoColor = p.algo(snapshot.algo);
-    final sz = Size.square(size);
     final supplyFrac = snapshot.supply.total == null ? 0.0 : snapshot.supply.total! / snapshot.supply.cap;
     final fee = snapshot.feeRate;
-    return SizedBox.fromSize(
-      size: sz,
-      child: Stack(clipBehavior: Clip.none, children: [
-        CustomPaint(size: sz, painter: DialPainter(snapshot: snapshot, palette: p)),
-        Center(
-          child: SizedBox(
-            width: size * 0.54,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
+    // The painter draws its rings from the LAID-OUT width, which a narrow phone clamps
+    // below the declared `size` (340 -> 328 at 360 dp). Measure it here so the centre
+    // readout and the pills use the same geometry the rings are painted with, and cap
+    // the readout to the inner tick circle so it can never collide with the ticks.
+    return LayoutBuilder(builder: (context, constraints) {
+      final w = math.min(size, constraints.maxWidth);
+      final sz = Size.square(w);
+      final inner = 2 * DialPainter.rTicks * w - 32;
+      return SizedBox.fromSize(
+        size: sz,
+        child: Stack(clipBehavior: Clip.none, children: [
+          CustomPaint(size: sz, painter: DialPainter(snapshot: snapshot, palette: p)),
+          Center(
+            child: SizedBox(
+              width: inner, height: inner,
+              child: FittedBox(fit: BoxFit.scaleDown, child: Column(mainAxisSize: MainAxisSize.min, children: [
               Text('BLOCK HEIGHT', style: kLabel.copyWith(fontSize: 9.5, letterSpacing: 1.6, color: p.muted)),
               const SizedBox(height: 3),
               FittedBox(child: Text(fmtHeight(snapshot.height), style: kMono.copyWith(fontSize: 31, letterSpacing: -0.5, color: p.text))),
@@ -39,14 +47,15 @@ class Dial extends StatelessWidget {
               Text(fee == null ? 'no fee-paying tx' : 'min ${fmtFeeDgbPerKb(fee.min)} · max ${fmtFeeDgbPerKb(fee.max)}', style: kMono.copyWith(fontSize: 10.5, fontWeight: FontWeight.w500, color: p.muted)),
               const SizedBox(height: 2),
               Text('${fmtHeight(snapshot.sizeBytes)} B · ${snapshot.txCount} tx', style: kMono.copyWith(fontSize: 12, color: p.text)),
-              IconButton(onPressed: onOpenExplorer, iconSize: 16, color: p.muted, constraints: const BoxConstraints(minWidth: 44, minHeight: 44), icon: const Icon(Icons.open_in_new)),
-            ]),
+              IconButton(onPressed: onOpenExplorer, iconSize: 16, color: p.muted, constraints: const BoxConstraints(minWidth: 44, minHeight: 44), icon: const Icon(Icons.content_copy)),
+              ])),
+            ),
           ),
-        ),
-        _pill(context, DialPainter.pillOffset(sz, DialPainter.rSupply, supplyFrac), snapshot.supply.total == null ? '—' : fmtPercent(supplyFrac)),
-        _pill(context, DialPainter.pillOffset(sz, DialPainter.rReduction, snapshot.reduction.fraction), fmtPercent(snapshot.reduction.fraction)),
-      ]),
-    );
+          _pill(context, DialPainter.pillOffset(sz, DialPainter.rSupply, supplyFrac), snapshot.supply.total == null ? '—' : fmtPercent(supplyFrac)),
+          _pill(context, DialPainter.pillOffset(sz, DialPainter.rReduction, snapshot.reduction.fraction), fmtPercent(snapshot.reduction.fraction)),
+        ]),
+      );
+    });
   }
 
   Widget _pill(BuildContext context, Offset at, String text) {

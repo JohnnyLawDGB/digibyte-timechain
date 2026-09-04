@@ -11,8 +11,8 @@ class FeeMempoolCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette; final m = snapshot.mempool;
     Widget title(String a, String b) => Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Flexible(child: Text(a, overflow: TextOverflow.ellipsis, style: kLabel.copyWith(letterSpacing: 1.6, color: p.muted))),
-      Flexible(child: Text(b, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: TextStyle(fontSize: 10, color: p.muted))),
+      Flexible(child: Text(a, maxLines: 1, overflow: TextOverflow.ellipsis, style: kLabel.copyWith(letterSpacing: 1.6, color: p.muted))),
+      Flexible(child: Text(b, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: TextStyle(fontSize: 10, color: p.muted))),
     ]);
     Widget est(String label, String value, String sub) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: p.card2, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: kLabel.copyWith(fontSize: 9, letterSpacing: 1.2, color: p.muted)), Text(value, style: kMono.copyWith(fontSize: 20, color: p.text)), Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 9.5, color: p.muted))]));
