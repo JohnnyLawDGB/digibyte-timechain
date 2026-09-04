@@ -4,7 +4,22 @@ import 'package:digibyte_timechain/ui/dial/dial.dart';
 import 'package:digibyte_timechain/ui/theme/timechain_theme.dart';
 import '../../fixtures/fixtures.dart';
 
-Widget host(Widget child, TimechainPalette p) => MaterialApp(theme: timechainTheme(p), home: Scaffold(body: Center(child: RepaintBoundary(child: child))));
+const goldenFrameKey = Key('golden-frame');
+
+Widget host(Widget child, TimechainPalette p) => MaterialApp(
+  theme: timechainTheme(p),
+  home: Scaffold(
+    body: Center(
+      child: RepaintBoundary(
+        child: ColoredBox(
+          key: goldenFrameKey,
+          color: p.bg,
+          child: Padding(padding: const EdgeInsets.all(12), child: child),
+        ),
+      ),
+    ),
+  ),
+);
 
 void main() {
   testWidgets('renders height, algo, fee band and pills for a scrubbed block', (t) async {
@@ -24,16 +39,16 @@ void main() {
     expect(find.text('—'), findsWidgets);
   });
   testWidgets('golden: dark', (t) async {
-    await t.pumpWidget(host(Dial(snapshot: blockFixture()), TimechainPalette.dark));
-    await expectLater(find.byType(Dial), matchesGoldenFile('../../goldens/dial_dark.png'));
+    await t.pumpWidget(host(Dial(snapshot: ringFixture()), TimechainPalette.dark));
+    await expectLater(find.byKey(goldenFrameKey), matchesGoldenFile('../../goldens/dial_dark.png'));
   });
   testWidgets('golden: light', (t) async {
-    await t.pumpWidget(host(Dial(snapshot: blockFixture()), TimechainPalette.light));
-    await expectLater(find.byType(Dial), matchesGoldenFile('../../goldens/dial_light.png'));
+    await t.pumpWidget(host(Dial(snapshot: ringFixture()), TimechainPalette.light));
+    await expectLater(find.byKey(goldenFrameKey), matchesGoldenFile('../../goldens/dial_light.png'));
   });
   testWidgets('golden: dark at tablet size', (t) async {
     await t.binding.setSurfaceSize(const Size(900, 900));
-    await t.pumpWidget(host(Dial(snapshot: blockFixture(), size: 800), TimechainPalette.dark));
-    await expectLater(find.byType(Dial), matchesGoldenFile('../../goldens/dial_dark_800.png'));
+    await t.pumpWidget(host(Dial(snapshot: ringFixture(), size: 800), TimechainPalette.dark));
+    await expectLater(find.byKey(goldenFrameKey), matchesGoldenFile('../../goldens/dial_dark_800.png'));
   });
 }
