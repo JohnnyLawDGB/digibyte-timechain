@@ -42,37 +42,44 @@ class SseClient implements SseSource {
     return _ctrl!.stream;
   }
 
+  int _gen = 0;
+
   void _start() {
     _closed = false;
-    _run();
+    _run(++_gen);
   }
 
-  Future<void> _run() async {
+  bool _cancelled(int gen) => _closed || gen != _gen;
+
+  Future<void> _run(int gen) async {
     var attempt = 0;
-    while (!_closed) {
+    while (!_cancelled(gen)) {
       _state.value = SseState.connecting;
+      final client = _clientFactory();
+      _client = client;
       try {
-        _client = _clientFactory();
-        final res = await _client!.send(http.Request('GET', uri)..headers['Accept'] = 'text/event-stream');
+        final res = await client.send(http.Request('GET', uri)..headers['Accept'] = 'text/event-stream');
+        if (_cancelled(gen)) break;
         if (res.statusCode != 200) throw http.ClientException('HTTP ${res.statusCode}', uri);
         _state.value = SseState.connected;
         attempt = 0;
         await for (final e in parseSse(res.stream.transform(utf8.decoder).transform(const LineSplitter()))) {
-          if (_closed) break;
+          if (_cancelled(gen)) break;
           _ctrl?.add(e);
         }
       } catch (_) {
         // fall through to reconnect
       } finally {
-        _client?.close(); _client = null;
+        client.close();
+        if (identical(_client, client)) _client = null;
       }
-      if (_closed) break;
+      if (_cancelled(gen)) break;
       _state.value = SseState.disconnected;
       final delay = _backoff(++attempt);
       if (delay == null) break;
       await Future<void>.delayed(delay);
     }
-    _state.value = SseState.disconnected;
+    if (gen == _gen) _state.value = SseState.disconnected;
   }
 
   /// Last listener left: stop connecting, keep the controller so a later listen restarts.

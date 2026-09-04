@@ -72,4 +72,24 @@ void main() {
     await sub2.cancel();
     client.close();
   });
+  test('a stop during an in-flight request cannot leak state into a restarted loop', () async {
+    var requests = 0;
+    final slow = MockClient.streaming((req, body) async {
+      requests++;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      return http.StreamedResponse(const Stream<List<int>>.empty(), 200, headers: {'content-type': 'text/event-stream'});
+    });
+    final client = SseClient(uri: Uri.parse('http://x/stream'), clientFactory: () => slow, backoff: (_) => null);
+    final states = <SseState>[];
+    final sub1 = client.events.listen((_) {});
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await sub1.cancel();                                   // first request still in flight
+    client.state.addListener(() => states.add(client.state.value));
+    final sub2 = client.events.listen((_) {});
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    expect(requests, 2);
+    expect(states.where((s) => s == SseState.connected).length, 1, reason: 'states: $states');
+    await sub2.cancel();
+    client.close();
+  });
 }
