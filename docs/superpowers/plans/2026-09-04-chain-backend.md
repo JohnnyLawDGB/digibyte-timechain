@@ -1936,3 +1936,7 @@ Expected: JSON tip locally and through nginx; the public stream shows `event: ti
 - [ ] **Step 4: Record the deployment**
 
 Append to `~/digibyte-timechain/docs/superpowers/plans/2026-09-04-chain-backend.md` a final line `Deployed <date>: <commit sha> on api.digiscope.me` and commit it in the Timechain repo.
+
+---
+
+**Deployed 2026-09-05:** DigiScope backend `main` 91a6fbc (squash of PR #233) on api.digiscope.me. Production is an rsync target (`/opt/digiscope-backend`, code at the repo root, custom `ecosystem.config.cjs`), not a git checkout, so the deploy was surgical: the 18 files the PR changed plus `server.js` patched on top of production's copy (which carries case-report routes not yet in `main`). Backups in `/root/backups/chain-deploy-2026-09-05/`. Added an nginx `location = /api/chain/stream` with `proxy_buffering off` (mirrors the chat stream). Verified publicly: tip, block 24151710 fee band + pool, 404 above tip, 400 below floor, SSE tip/mempool/ping frames, existing routes 200. Release APK v0.1.0 installed on the Note 8 (SM-N950U).
