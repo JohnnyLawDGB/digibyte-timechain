@@ -1,0 +1,142 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:digibyte_timechain/app.dart';
+import 'package:digibyte_timechain/data/chain_api.dart';
+import 'package:digibyte_timechain/data/chain_repository.dart';
+import 'package:digibyte_timechain/state/providers.dart';
+import 'package:digibyte_timechain/ui/dial/dial.dart';
+import 'package:digibyte_timechain/ui/screens/dial_screen.dart';
+import 'package:digibyte_timechain/state/settings.dart';
+import '../../fixtures/fixtures.dart';
+
+class MockRepo extends Mock implements ChainRepository {}
+
+void main() {
+  late MockRepo repo; late StreamController<TipUpdate> tips;
+  setUp(() async {
+    repo = MockRepo(); tips = StreamController<TipUpdate>.broadcast();
+    when(() => repo.watchTip()).thenAnswer((_) => tips.stream);
+    when(() => repo.fetchBlock(24151774)).thenAnswer((_) async => blockFixture().copyWith(height: 24151774));
+    when(() => repo.refreshNow()).thenAnswer((_) async {});
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  Future<void> pumpApp(WidgetTester t, {List<Override> overrides = const []}) async {
+    final prefs = await SharedPreferences.getInstance();
+    // nowProvider is periodic; a fixed value keeps pumpAndSettle from waiting on a live timer.
+    await t.pumpWidget(ProviderScope(overrides: [
+      chainRepositoryProvider.overrideWithValue(repo),
+      sharedPrefsProvider.overrideWithValue(prefs),
+      nowProvider.overrideWith((_) => Stream.value(DateTime.fromMillisecondsSinceEpoch((tipFixture().time + 9) * 1000, isUtc: true))),
+      ...overrides,
+    ], child: const TimechainApp()));
+  }
+
+  testWidgets('shows a loading state, then the live dial, then a scrubbed block', (t) async {
+    await t.binding.setSurfaceSize(const Size(390, 1200));
+    await pumpApp(t);
+    expect(find.text('Connecting to the chain…'), findsOneWidget);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live));
+    await t.pump();
+    expect(find.text('LIVE'), findsOneWidget);
+    expect(find.text('24,151,775'), findsOneWidget);
+    await t.tap(find.byKey(const Key('scrub-prev')));
+    await t.pump(); await t.pump();
+    expect(find.text('VIEWING BLOCK'), findsOneWidget);
+    expect(find.text('24,151,774'), findsOneWidget);
+    expect(find.text('1 behind tip'), findsOneWidget);
+    // The header price is a live figure, not a per-block one: scrubbing must not blank it.
+    expect(find.text('0.00469'), findsOneWidget);
+  });
+
+  testWidgets('renders the live dial on a 360 dp phone without overflowing', (t) async {
+    await t.binding.setSurfaceSize(const Size(360, 1400));
+    await pumpApp(t);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live));
+    await t.pump();
+    expect(t.takeException(), isNull);
+    expect(find.text('24,151,775'), findsOneWidget);
+    await t.binding.setSurfaceSize(null);
+  });
+  testWidgets('a failed block fetch explains why, keeps the last render and retries', (t) async {
+    await t.binding.setSurfaceSize(const Size(390, 1200));
+    var fail = true;
+    when(() => repo.fetchBlock(24151774)).thenAnswer((_) async {
+      if (fail) throw BlockNotFound();
+      return blockFixture().copyWith(height: 24151774);
+    });
+    await pumpApp(t);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live));
+    await t.pump(); await t.pump();          // let the live block resolve and render once
+    expect(find.text('24,151,775'), findsOneWidget);
+    await t.tap(find.byKey(const Key('scrub-prev')));
+    await t.pump(); await t.pump();
+    expect(find.text('That block is not available.'), findsOneWidget);
+    expect(find.textContaining('BlockNotFound'), findsNothing);
+    expect(find.byKey(const Key('scrub-retry')), findsOneWidget);
+    expect(find.text('VIEWING BLOCK'), findsOneWidget);
+    fail = false;
+    await t.tap(find.byKey(const Key('scrub-retry')));
+    await t.pump(); await t.pump();
+    expect(find.text('24,151,774'), findsOneWidget);
+    expect(find.text('That block is not available.'), findsNothing);
+    await t.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('a block that fails before anything has rendered shows only the error card', (t) async {
+    await t.binding.setSurfaceSize(const Size(390, 1200));
+    when(() => repo.fetchBlock(24151700)).thenAnswer((_) async => throw ChainWarmingUp());
+    await pumpApp(t, overrides: [selectedHeightProvider.overrideWith((_) => 24151700)]);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live));
+    await t.pump(); await t.pump();
+    expect(find.text('The chain feed is warming up, try again shortly.'), findsOneWidget);
+    expect(find.byKey(const Key('scrub-retry')), findsOneWidget);
+    expect(find.byType(Dial), findsNothing);
+    await t.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('stale and reconnecting badges', (t) async {
+    await t.binding.setSurfaceSize(const Size(390, 1200));
+    await pumpApp(t);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.stale)); await t.pump();
+    expect(find.textContaining('STALE'), findsOneWidget);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.reconnecting)); await t.pump();
+    expect(find.text('RECONNECTING'), findsOneWidget);
+  });
+  testWidgets('resuming from the background refreshes the tip and restarts the tick', (t) async {
+    await pumpApp(t);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live)); await t.pump();
+    final c = ProviderScope.containerOf(t.element(find.byType(DialScreen)));
+    for (final s in [AppLifecycleState.inactive, AppLifecycleState.hidden, AppLifecycleState.paused]) {
+      t.binding.handleAppLifecycleStateChanged(s); await t.pump();
+    }
+    expect(c.read(appResumedProvider), isFalse);
+    verifyNever(() => repo.refreshNow());
+    for (final s in [AppLifecycleState.hidden, AppLifecycleState.inactive, AppLifecycleState.resumed]) {
+      t.binding.handleAppLifecycleStateChanged(s); await t.pump();
+    }
+    expect(c.read(appResumedProvider), isTrue);
+    verify(() => repo.refreshNow()).called(1);
+  });
+
+  testWidgets('settings toggles the theme', (t) async {
+    await t.binding.setSurfaceSize(const Size(390, 1200));
+    await pumpApp(t);
+    tips.add(TipUpdate(tipFixture(), FeedStatus.live)); await t.pump();
+    expect(t.widget<MaterialApp>(find.byType(MaterialApp)).themeMode, ThemeMode.dark);
+    await t.tap(find.byIcon(Icons.settings)); await t.pumpAndSettle();
+    await t.tap(find.text('Light')); await t.pumpAndSettle();
+    final app = t.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(app.themeMode, ThemeMode.light);
+    expect(app.theme!.brightness, Brightness.light);
+    expect(find.text('USD'), findsOneWidget);
+    await t.tap(find.text('System')); await t.pumpAndSettle();
+    final app2 = t.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(app2.themeMode, ThemeMode.system);
+    expect(app2.darkTheme!.brightness, Brightness.dark);
+  });
+}

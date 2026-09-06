@@ -1,0 +1,11 @@
+{"height":24151775,"hash":"000000000000000e1f","prevHash":"000000000000000e1e","time":1788519180,"algo":"odocrypt","sizeBytes":386,"txCount":1,
+ "feeRate":null,
+ "reward":{"subsidy":253.55810338,"fees":0,"total":253.55810338},
+ "pool":{"tag":"m2pool.com","raw":"/m2pool.com/"},
+ "reduction":{"step":130,"cycle":175200,"blocksUntilNext":54225,"nextHeight":24206000,"fraction":0.6905},
+ "supply":{"total":18457077640.5,"cap":21000000000},
+ "algoShare24h":{"sha256d":0.2,"scrypt":0.2,"skein":0.2125,"qubit":0.1833,"odocrypt":0.2042,"blocksCounted":240},
+ "recentBlocks":[{"height":24151775,"algo":"odocrypt","sizeBytes":386,"txCount":1,"time":1788519180},{"height":24151774,"algo":"qubit","sizeBytes":281,"txCount":1,"time":1788519110}],
+ "mempool":{"txCount":0,"vbytes":0,"inflowVbPerSec":0,"depthBlocks":0,"fees":{"unit":"DGB/kB","priority":0.011,"anytime":0.0011},"asOf":1788519200},
+ "price":{"usd":0.004692,"marketCapUsd":86600608,"asOf":1788519180,"isStale":false},
+ "isTip":true}
