@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Code goes in the DigiScope monorepo at `/home/polloloco/digibyte-compendium/backend` (remote `git@github.com:JohnnyLawDGB/digibyte-compendium.git`). Work on a branch `feat/chain-timechain-api` cut from `master`. Do NOT touch `/opt/digiscope-backend` on the VPS until the deploy task.
-- All routes are PUBLIC and unauthenticated. Never import `panopticon-service.js` — Panopticon is private forensics and is not this app's data source.
+- All routes are PUBLIC and unauthenticated. Data comes only from our own node via ChainService.
 - Fee unit everywhere in output JSON is **DGB per kB** (`"unit": "DGB/kB"`). Core's `getblockstats` returns sat/vB; convert with `satPerVb / 100000`. Core's `estimatesmartfee` already returns DGB/kB.
 - Subsidy schedule is Core's Period VI: `nSubsidy = 2157 * COIN / 2`, then `months = floor((height − 1,430,000) × 15 / 2,628,000)` iterations of `n = n × 98884 / 100000` in integer math, `0` if below 1 DGB. Verified: height 24,151,775 → 25,355,810,338 sats; height 24,206,000 → 25,072,839,494 sats.
 - Reduction cycle: `BLOCKS_PER_MONTH = 175,200`, origin height `1,430,000`. Verified: height 24,151,775 → step 130, next cut at 24,206,000, 54,225 blocks to go, fraction 0.6905.
@@ -1759,7 +1759,7 @@ Expected: FAIL — unresolved import `./chain.js`.
  *   GET /api/chain/tip            current tip snapshot
  *   GET /api/chain/block/:height  historical snapshot (scrubbing)
  *   GET /api/chain/stream         SSE: tip on new block, mempool every 5 s, ping every 25 s
- * Data comes from our own node via ChainService; never from Panopticon.
+ * Data comes from our own node via ChainService.
  */
 import { Router } from 'express';
 
@@ -1822,7 +1822,7 @@ import { ChainService } from './services/chain/chain-service.js';
 Add next to `app.use('/api/network', networkRouter);`:
 
 ```js
-// Timechain app feed — public, our own node, no Panopticon.
+// Timechain app feed — public, our own node.
 const chainService = new ChainService({ rpc: rpcClient, db: getDatabase() });
 app.use('/api/chain', publicLimiter, createChainRouter({ service: chainService }));
 ```
@@ -1913,7 +1913,7 @@ Adds a self-contained `chain` service + three public routes (tip, block/:height,
 - Reorg-safe tip watcher with 5,760-block backfill, SQLite rows (migration 130)
 - Mempool sampler (inflow/depth/fee estimates), oracle price, supply checkpoint
 - Fees in DGB/kB throughout
-- 40 new vitest tests; no Panopticon dependency
+- 40 new vitest tests
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
