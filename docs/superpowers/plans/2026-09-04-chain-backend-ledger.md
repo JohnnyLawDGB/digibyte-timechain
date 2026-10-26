@@ -1,7 +1,7 @@
-# SDD ledger — plan: /home/polloloco/digibyte-timechain/docs/superpowers/plans/2026-09-04-chain-backend.md
-Spec: /home/polloloco/digibyte-timechain/docs/superpowers/specs/2026-09-04-digibyte-timechain-design.md
-Worktree: /home/polloloco/wt-chain-api (branch feat/chain-timechain-api from origin/main a2d2fc3). Code under backend/.
-node_modules copied from ~/digibyte-compendium/backend. Tests: `npx vitest run <file>`.
+# SDD ledger — plan: <timechain-repo>/docs/superpowers/plans/2026-09-04-chain-backend.md
+Spec: <timechain-repo>/docs/superpowers/specs/2026-09-04-digibyte-timechain-design.md
+Worktree: <backend-worktree> (branch feat/chain-timechain-api from origin/main a2d2fc3). Code under backend/.
+node_modules copied from <backend-repo>/backend. Tests: `npx vitest run <file>`.
 
 ## Pre-flight scan (2026-09-04)
 | Pair / task | Produces vs consumes | Finding |

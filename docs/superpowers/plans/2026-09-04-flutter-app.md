@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Project lives at `app/` inside this repo (`~/digibyte-timechain`). Package name `digibyte_timechain`, org `me.digiscope`, platforms `android,ios` only.
+- Project lives at `app/` inside this repo (`<timechain-repo>`). Package name `digibyte_timechain`, org `me.digiscope`, platforms `android,ios` only.
 - API base URL defaults to `https://api.digiscope.me/api` and is overridable with `--dart-define=CHAIN_API_BASE=...`.
 - Fee unit is **DGB/kB**, formatted to 4 significant digits (`0.1000`, `0.0011`). Never show sat/vB.
 - Reduction ring label is **percent of the cycle** (`69.0%`); the block count and days estimate belong to the "Next cut" tile.
@@ -20,7 +20,7 @@
 - Fonts: Space Grotesk (labels/display) and JetBrains Mono (figures) bundled as assets from Google Fonts (OFL). Fallback to system fonts if the download step fails; do not block on it.
 - Hit targets ≥ 44 px. No fake status bar.
 - Dark theme is the default. Fiat setting exists but v1 offers USD only (the backend price is the DigiDollar oracle, USD-denominated). This is a known narrowing of spec §2 "fiat currency for the price tiles" and is flagged at handoff.
-- Every task: `cd ~/digibyte-timechain/app && flutter analyze` must be clean and `flutter test` green before commit.
+- Every task: `cd <timechain-repo>/app && flutter analyze` must be clean and `flutter test` green before commit.
 - Commit messages: conventional prefix, end with
   `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
 - iOS build/test needs macOS; this box is Linux. Android is verified on the Samsung SM-N950U (API 28). iOS steps are written down but marked "run on the Mac".
@@ -101,7 +101,7 @@ SSE events: `tip` (full snapshot), `mempool` (`{"height":…,"mempool":{…},"pr
 - [ ] **Step 1: Create the project and add dependencies**
 
 ```bash
-cd ~/digibyte-timechain && flutter create --org me.digiscope --project-name digibyte_timechain --platforms android,ios app
+cd <timechain-repo> && flutter create --org me.digiscope --project-name digibyte_timechain --platforms android,ios app
 cd app
 flutter pub add flutter_riverpod:^2.6.1 freezed_annotation:^2.4.4 json_annotation:^4.9.0 http:^1.3.0 path_provider:^2.1.5 shared_preferences:^2.5.3 intl:^0.20.2 flutter_svg:^2.0.17
 flutter pub add --dev build_runner:^2.4.15 freezed:^2.5.8 json_serializable:^6.9.4 mocktail:^1.0.4
@@ -111,8 +111,8 @@ rm test/widget_test.dart
 - [ ] **Step 2: Fetch fonts and the brand symbol**
 
 ```bash
-cd ~/digibyte-timechain/app && mkdir -p assets/fonts assets/brand
-cp "/home/polloloco/digiscope-oracle/data/branding/digibyte-logos/Logos Vector/DigiByte Symbol.svg" assets/brand/digibyte_symbol.svg
+cd <timechain-repo>/app && mkdir -p assets/fonts assets/brand
+cp "<brand-assets>/digibyte-logos/Logos Vector/DigiByte Symbol.svg" assets/brand/digibyte_symbol.svg
 for f in SpaceGrotesk-Medium SpaceGrotesk-Bold; do curl -fsSL -o assets/fonts/$f.ttf "https://github.com/floriankarsten/space-grotesk/raw/master/fonts/ttf/$f.ttf"; done
 for f in JetBrainsMono-Medium JetBrainsMono-Bold; do curl -fsSL -o assets/fonts/$f.ttf "https://github.com/JetBrains/JetBrainsMono/raw/master/fonts/ttf/$f.ttf"; done
 ls -la assets/fonts
@@ -171,7 +171,7 @@ void main() {
 
 - [ ] **Step 5: Run the test to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/ui/theme/timechain_theme_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/ui/theme/timechain_theme_test.dart`
 Expected: FAIL — `timechain_theme.dart` not found.
 
 - [ ] **Step 6: Write config and theme**
@@ -245,11 +245,11 @@ const TextStyle kLabel = TextStyle(fontFamily: 'SpaceGrotesk', fontWeight: FontW
 
 - [ ] **Step 7: Run the test to verify it passes, analyze, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter pub get && flutter analyze && flutter test`
+Run: `cd <timechain-repo>/app && flutter pub get && flutter analyze && flutter test`
 Expected: analyze "No issues found!", 2 tests pass.
 
 ```bash
-cd ~/digibyte-timechain && git add app && git commit -m "feat(app): scaffold Flutter project with DigiByte palette, fonts and theme
+cd <timechain-repo> && git add app && git commit -m "feat(app): scaffold Flutter project with DigiByte palette, fonts and theme
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -304,7 +304,7 @@ void main() {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/domain/reduction_schedule_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/domain/reduction_schedule_test.dart`
 Expected: FAIL — file not found.
 
 - [ ] **Step 3: Implement**
@@ -353,11 +353,11 @@ class ReductionSchedule {
 
 - [ ] **Step 4: Run to verify it passes, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/domain/reduction_schedule_test.dart && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/domain/reduction_schedule_test.dart && flutter analyze`
 Expected: 6 tests pass, no issues.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/domain/reduction_schedule.dart app/test/domain/reduction_schedule_test.dart && git commit -m "feat(app): exact Period VI subsidy and reduction-cycle replica
+cd <timechain-repo> && git add app/lib/domain/reduction_schedule.dart app/test/domain/reduction_schedule_test.dart && git commit -m "feat(app): exact Period VI subsidy and reduction-cycle replica
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -460,7 +460,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/domain/`
+Run: `cd <timechain-repo>/app && flutter test test/domain/`
 Expected: two files fail to compile (missing imports).
 
 - [ ] **Step 3: Implement**
@@ -557,11 +557,11 @@ String fmtWeekday(int unix) => DateFormat('EEEE', 'en_US').format(_utc(unix)).to
 
 - [ ] **Step 4: Run to verify they pass, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/domain/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/domain/ && flutter analyze`
 Expected: 11 tests pass, no issues.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/domain app/test/domain && git commit -m "feat(app): ring geometry and display formatters
+cd <timechain-repo> && git add app/lib/domain app/test/domain && git commit -m "feat(app): ring geometry and display formatters
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -669,7 +669,7 @@ void main() {
 
 - [ ] **Step 3: Run to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/models/chain_snapshot_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/data/models/chain_snapshot_test.dart`
 Expected: FAIL — model file missing.
 
 - [ ] **Step 4: Write the models and generate**
@@ -771,17 +771,17 @@ class ChainSnapshot with _$ChainSnapshot {
 }
 ```
 
-Generate: `cd ~/digibyte-timechain/app && dart run build_runner build --delete-conflicting-outputs`
+Generate: `cd <timechain-repo>/app && dart run build_runner build --delete-conflicting-outputs`
 
 `json_serializable` needs `int` fields to be ints in JSON; the backend emits `depthBlocks`/`inflowVbPerSec` as numbers that may serialize as `0` — `double` fields accept ints in Dart JSON decoding via `(json['x'] as num).toDouble()`, which json_serializable generates automatically. If `flutter analyze` complains about the generated files, add `analyzer: exclude: ['**/*.g.dart', '**/*.freezed.dart']` to `analysis_options.yaml`.
 
 - [ ] **Step 5: Run to verify it passes, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/models/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/data/models/ && flutter analyze`
 Expected: 5 tests pass.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/data/models app/test/data/models app/test/fixtures app/analysis_options.yaml && git commit -m "feat(app): freezed models for the /api/chain snapshot contract
+cd <timechain-repo> && git add app/lib/data/models app/test/data/models app/test/fixtures app/analysis_options.yaml && git commit -m "feat(app): freezed models for the /api/chain snapshot contract
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -880,7 +880,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/sse_parser_test.dart test/data/sse_client_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/data/sse_parser_test.dart test/data/sse_client_test.dart`
 Expected: FAIL — missing files.
 
 - [ ] **Step 3: Implement**
@@ -1005,11 +1005,11 @@ class SseClient implements SseSource {
 
 - [ ] **Step 4: Run to verify they pass, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/data/ && flutter analyze`
 Expected: 10 tests pass, no issues.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/data/sse_parser.dart app/lib/data/sse_client.dart app/test/data/sse_parser_test.dart app/test/data/sse_client_test.dart && git commit -m "feat(app): SSE parser and reconnecting client with backoff
+cd <timechain-repo> && git add app/lib/data/sse_parser.dart app/lib/data/sse_client.dart app/test/data/sse_parser_test.dart app/test/data/sse_client_test.dart && git commit -m "feat(app): SSE parser and reconnecting client with backoff
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1080,7 +1080,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/chain_api_test.dart test/data/snapshot_cache_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/data/chain_api_test.dart test/data/snapshot_cache_test.dart`
 Expected: FAIL — missing files.
 
 - [ ] **Step 3: Implement**
@@ -1156,11 +1156,11 @@ class SnapshotCache {
 
 - [ ] **Step 4: Run to verify they pass, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/data/ && flutter analyze`
 Expected: 13 tests pass.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/data/chain_api.dart app/lib/data/snapshot_cache.dart app/test/data/chain_api_test.dart app/test/data/snapshot_cache_test.dart && git commit -m "feat(app): chain REST client and on-disk tip cache
+cd <timechain-repo> && git add app/lib/data/chain_api.dart app/lib/data/snapshot_cache.dart app/test/data/chain_api_test.dart app/test/data/snapshot_cache_test.dart && git commit -m "feat(app): chain REST client and on-disk tip cache
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1267,7 +1267,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/chain_repository_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/data/chain_repository_test.dart`
 Expected: FAIL — missing file.
 
 - [ ] **Step 3: Implement**
@@ -1372,11 +1372,11 @@ class ChainRepository {
 
 - [ ] **Step 4: Run to verify it passes, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/data/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/data/ && flutter analyze`
 Expected: 17 tests pass.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/data/chain_repository.dart app/test/data/chain_repository_test.dart && git commit -m "feat(app): ChainRepository merges SSE, polling fallback and disk cache
+cd <timechain-repo> && git add app/lib/data/chain_repository.dart app/test/data/chain_repository_test.dart && git commit -m "feat(app): ChainRepository merges SSE, polling fallback and disk cache
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1459,7 +1459,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/state/`
+Run: `cd <timechain-repo>/app && flutter test test/state/`
 Expected: FAIL — missing files.
 
 - [ ] **Step 3: Implement**
@@ -1553,11 +1553,11 @@ extension _StartWith on Stream<DateTime> {
 
 - [ ] **Step 4: Run to verify they pass, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/state/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/state/ && flutter analyze`
 Expected: 3 tests pass.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/state app/test/state && git commit -m "feat(app): settings persistence and Riverpod providers for tip/selection
+cd <timechain-repo> && git add app/lib/state app/test/state && git commit -m "feat(app): settings persistence and Riverpod providers for tip/selection
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1621,7 +1621,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/ui/dial/dial_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/ui/dial/dial_test.dart`
 Expected: FAIL — missing files.
 
 - [ ] **Step 3: Implement**
@@ -1785,11 +1785,11 @@ class Dial extends StatelessWidget {
 
 - [ ] **Step 4: Generate goldens, run, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test --update-goldens test/ui/dial/dial_test.dart && flutter test test/ui/dial/dial_test.dart && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test --update-goldens test/ui/dial/dial_test.dart && flutter test test/ui/dial/dial_test.dart && flutter analyze`
 Expected: goldens written to `test/goldens/`, then 5 tests pass. Open `test/goldens/dial_dark.png` and compare against `docs/mockups/2026-09-04-dial/dial-dark.png`: four rings, ticks colored per algorithm, pills at the arc ends. Golden tests render with the test font (Ahem), so text looks like boxes — that is expected.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/ui/dial app/lib/ui/widgets app/test/ui/dial app/test/goldens && git commit -m "feat(app): dial painter and Dial widget with goldens
+cd <timechain-repo> && git add app/lib/ui/dial app/lib/ui/widgets app/test/ui/dial app/test/goldens && git commit -m "feat(app): dial painter and Dial widget with goldens
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1877,7 +1877,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/ui/tiles/tiles_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/ui/tiles/tiles_test.dart`
 Expected: FAIL — missing files.
 
 - [ ] **Step 3: Implement**
@@ -2102,11 +2102,11 @@ class AlgoLegend extends StatelessWidget {
 
 - [ ] **Step 4: Run to verify it passes, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/ui/tiles/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/ui/tiles/ && flutter analyze`
 Expected: 7 tests pass.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/ui/tiles app/test/ui/tiles && git commit -m "feat(app): header, timer, reward, fee/mempool, footer and legend tiles
+cd <timechain-repo> && git add app/lib/ui/tiles app/test/ui/tiles && git commit -m "feat(app): header, timer, reward, fee/mempool, footer and legend tiles
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -2170,7 +2170,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/ui/scrubber/scrubber_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/ui/scrubber/scrubber_test.dart`
 Expected: FAIL — missing file.
 
 - [ ] **Step 3: Implement**
@@ -2225,11 +2225,11 @@ class Scrubber extends StatelessWidget {
 
 - [ ] **Step 4: Run to verify it passes, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/ui/scrubber/ && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test test/ui/scrubber/ && flutter analyze`
 Expected: 3 tests pass.
 
 ```bash
-cd ~/digibyte-timechain && git add app/lib/ui/scrubber app/test/ui/scrubber && git commit -m "feat(app): block scrubber with snap-to-block drag and live return
+cd <timechain-repo> && git add app/lib/ui/scrubber app/test/ui/scrubber && git commit -m "feat(app): block scrubber with snap-to-block drag and live return
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -2320,7 +2320,7 @@ void main() {
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `cd ~/digibyte-timechain/app && flutter test test/ui/screens/dial_screen_test.dart`
+Run: `cd <timechain-repo>/app && flutter test test/ui/screens/dial_screen_test.dart`
 Expected: FAIL — missing files.
 
 - [ ] **Step 3: Implement**
@@ -2506,11 +2506,11 @@ Note on `themeMode` in `app.dart`: with `themeMode: ThemeMode.light` Flutter use
 
 - [ ] **Step 4: Run to verify it passes, then the whole suite, commit**
 
-Run: `cd ~/digibyte-timechain/app && flutter test && flutter analyze`
+Run: `cd <timechain-repo>/app && flutter test && flutter analyze`
 Expected: all tests green (about 40), no issues.
 
 ```bash
-cd ~/digibyte-timechain && git add app && git commit -m "feat(app): dial and settings screens, app wiring, main
+cd <timechain-repo> && git add app && git commit -m "feat(app): dial and settings screens, app wiring, main
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -2528,7 +2528,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 The backend routes must already be deployed (backend plan Task 12). Then:
 
 ```bash
-cd ~/digibyte-timechain/app && flutter devices
+cd <timechain-repo>/app && flutter devices
 flutter run -d <SM-N950U device id> --release
 ```
 
@@ -2567,7 +2567,7 @@ Goldens: `flutter test --update-goldens test/ui/dial/dial_test.dart` after an in
 - [ ] **Step 4: Commit**
 
 ```bash
-cd ~/digibyte-timechain && git add app/README.md docs/superpowers/plans/2026-09-04-flutter-app.md && git commit -m "docs(app): README and device run notes
+cd <timechain-repo> && git add app/README.md docs/superpowers/plans/2026-09-04-flutter-app.md && git commit -m "docs(app): README and device run notes
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -2578,25 +2578,25 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 
 Production backend (`api.digiscope.me/api/chain`) is not deployed yet (PR #233 open, unmerged),
 so this run used the brief's fallback: the backend branch booted locally on this box
-(`/home/polloloco/wt-chain-api/backend`, `node src/server.js`, `PORT=3999`) with `DGB_RPC_HOST`
-pointed at an SSH tunnel (`ssh -f -N -L 15022:127.0.0.1:14022 root@129.212.182.152`) to the Adam
-VPS mainnet node's RPC port. Backend connected at height 24,152,752 (100% synced) and served
-`/api/chain/tip` on both `localhost:3999` and the LAN address `192.168.7.251:3999`.
+(`<backend-worktree>/backend`, `node src/server.js`, `PORT=3999`) with `DGB_RPC_HOST`
+pointed at an SSH tunnel (`ssh -f -N -L 15022:127.0.0.1:14022 <node-host>`) to the
+mainnet node's RPC port. Backend connected at height 24,152,752 (100% synced) and served
+`/api/chain/tip` on both `localhost:3999` and the LAN address `<lan-ip>:3999`.
 
-Device: Samsung SM-N950U (`ce061716640b191c017e`), Android 9 / API 28, on the same LAN.
-`flutter run -d ce061716640b191c017e --dart-define=CHAIN_API_BASE=http://192.168.7.251:3999/api`.
+Device: Samsung SM-N950U (`<device-id>`), Android 9 / API 28, on the same LAN.
+`flutter run -d <device-id> --dart-define=CHAIN_API_BASE=http://<lan-ip>:3999/api`.
 
 **Build blocker (environment, not app code):** the first two build attempts failed with
 `Entry FlutterPlugin.class is a duplicate but no duplicate handling strategy has been set` from
 Gradle's `:gradle:jar` task inside the Flutter SDK's own `packages/flutter_tools/gradle` module
-(`/opt/flutter`, pinned at 3.29.0 stable). Root cause: Gradle's `kotlin-dsl` plugin-accessor
+(`<flutter-sdk>`, pinned at 3.29.0 stable). Root cause: Gradle's `kotlin-dsl` plugin-accessor
 generator emits a synthetic `FlutterPlugin.kt` under
 `build/generated-sources/kotlin-dsl-plugins/kotlin/`, which collides by class name (both compile
 to a top-level, package-less `FlutterPlugin.class`) with the Groovy-compiled `FlutterPlugin`
 class from `src/main/groovy/flutter.groovy`. This reproduced from a clean rebuild
 (`--no-build-cache --rerun-tasks`), so it wasn't stale-cache — it's a real defect in this pinned
 SDK checkout's own build script. Fixed by adding `tasks.withType<Jar> { duplicatesStrategy =
-DuplicatesStrategy.EXCLUDE }` to `/opt/flutter/packages/flutter_tools/gradle/build.gradle.kts`
+DuplicatesStrategy.EXCLUDE }` to `<flutter-sdk>/packages/flutter_tools/gradle/build.gradle.kts`
 (a machine-local Flutter SDK file, outside this repo — not committed here). After that, the
 debug build succeeded (with an unrelated advisory-only NDK version mismatch warning:
 project pinned at NDK 26.3.11579264, `path_provider_android`/`shared_preferences_android` want
@@ -2642,4 +2642,4 @@ not a crash.
 **iOS:** not run (this box is Linux; iOS builds require a Mac). Deferred per Task 13 scope.
 
 **Cleanup:** `flutter run` process killed, backend (`node src/server.js`) stopped, SSH RPC
-tunnel to the Adam VPS closed. Airplane mode left OFF.
+tunnel to the mainnet node closed. Airplane mode left OFF.
