@@ -23,7 +23,7 @@ over the LAN; release builds keep HTTPS only. The main manifest declares
 
 Example, pointing at a backend running on this box's LAN IP:
 
-    flutter run -d <device-id> --dart-define=CHAIN_API_BASE=http://192.168.7.251:3999/api
+    flutter run -d <device-id> --dart-define=CHAIN_API_BASE=http://<lan-ip>:3999/api
 
 ## iOS
 

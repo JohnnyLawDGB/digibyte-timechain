@@ -8,11 +8,11 @@
 
 **Tech Stack:** Node 22 ESM, Express 4, better-sqlite3 (in-memory in tests), vitest + supertest, the existing `rpcClient` (`backend/src/utils/rpcClient.js`) over DigiByte Core v9.26.4 RPC.
 
-**Spec:** `~/digibyte-timechain/docs/superpowers/specs/2026-09-04-digibyte-timechain-design.md` (§5 Backend, §4 for the numbers the snapshot must carry). This plan lives in the Timechain repo; the code lives in the DigiScope monorepo.
+**Spec:** `<timechain-repo>/docs/superpowers/specs/2026-09-04-digibyte-timechain-design.md` (§5 Backend, §4 for the numbers the snapshot must carry). This plan lives in the Timechain repo; the code lives in the backend repo.
 
 ## Global Constraints
 
-- Code goes in the DigiScope monorepo at `/home/polloloco/digibyte-compendium/backend` (remote `git@github.com:JohnnyLawDGB/digibyte-compendium.git`). Work on a branch `feat/chain-timechain-api` cut from `master`. Do NOT touch `/opt/digiscope-backend` on the VPS until the deploy task.
+- Code goes in the backend repo at `<backend-repo>/backend` (remote `<backend-repo-remote>`). Work on a branch `feat/chain-timechain-api` cut from `master`. Do NOT touch `<backend-deploy-dir>` on the VPS until the deploy task.
 - All routes are PUBLIC and unauthenticated. Data comes only from our own node via ChainService.
 - Fee unit everywhere in output JSON is **DGB per kB** (`"unit": "DGB/kB"`). Core's `getblockstats` returns sat/vB; convert with `satPerVb / 100000`. Core's `estimatesmartfee` already returns DGB/kB.
 - Subsidy schedule is Core's Period VI: `nSubsidy = 2157 * COIN / 2`, then `months = floor((height − 1,430,000) × 15 / 2,628,000)` iterations of `n = n × 98884 / 100000` in integer math, `0` if below 1 DGB. Verified: height 24,151,775 → 25,355,810,338 sats; height 24,206,000 → 25,072,839,494 sats.
@@ -87,7 +87,7 @@ Snapshot JSON produced by `assembleSnapshot` (the contract the Flutter plan cons
 - [ ] **Step 1: Create the branch**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git checkout master && git pull --ff-only && git checkout -b feat/chain-timechain-api
+cd <backend-repo> && git checkout master && git pull --ff-only && git checkout -b feat/chain-timechain-api
 ```
 
 - [ ] **Step 2: Write the failing test**
@@ -133,7 +133,7 @@ describe('normalizeAlgo', () => {
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/subsidy.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/subsidy.test.js`
 Expected: FAIL — "Failed to resolve import ./subsidy.js".
 
 - [ ] **Step 4: Write the implementation**
@@ -192,13 +192,13 @@ export function subsidyDgb(height) {
 
 - [ ] **Step 5: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/subsidy.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/subsidy.test.js`
 Expected: PASS, 7 tests.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/constants.js backend/src/services/chain/subsidy.js backend/src/services/chain/subsidy.test.js && git commit -m "feat(chain): consensus constants and exact Period VI subsidy replica
+cd <backend-repo> && git add backend/src/services/chain/constants.js backend/src/services/chain/subsidy.js backend/src/services/chain/subsidy.test.js && git commit -m "feat(chain): consensus constants and exact Period VI subsidy replica
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -290,7 +290,7 @@ describe('fees', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/reduction.test.js src/services/chain/pools.test.js src/services/chain/fees.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/reduction.test.js src/services/chain/pools.test.js src/services/chain/fees.test.js`
 Expected: FAIL — three unresolved imports.
 
 - [ ] **Step 3: Write the implementations**
@@ -372,13 +372,13 @@ export function feeRateFromStats(stats, txCount) {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/`
 Expected: PASS, 17 tests across 4 files.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain && git commit -m "feat(chain): reduction cycle, pool tag lookup, DGB/kB fee conversion
+cd <backend-repo> && git add backend/src/services/chain && git commit -m "feat(chain): reduction cycle, pool tag lookup, DGB/kB fee conversion
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -450,7 +450,7 @@ describe('ChainStore', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/chain-store.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/chain-store.test.js`
 Expected: FAIL — cannot resolve `130_chain_blocks.js`.
 
 - [ ] **Step 3: Write the migration, register it, write the store**
@@ -554,13 +554,13 @@ export class ChainStore {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/chain-store.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/chain-store.test.js`
 Expected: PASS, 6 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/models/migrations/130_chain_blocks.js backend/src/models/db.js backend/src/services/chain/chain-store.js backend/src/services/chain/chain-store.test.js && git commit -m "feat(chain): migration 130 chain_blocks/chain_meta and ChainStore
+cd <backend-repo> && git add backend/src/models/migrations/130_chain_blocks.js backend/src/models/db.js backend/src/services/chain/chain-store.js backend/src/services/chain/chain-store.test.js && git commit -m "feat(chain): migration 130 chain_blocks/chain_meta and ChainStore
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -624,7 +624,7 @@ describe('fetchBlockRow', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/block-fetcher.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/block-fetcher.test.js`
 Expected: FAIL — unresolved import.
 
 - [ ] **Step 3: Write the implementation**
@@ -661,13 +661,13 @@ export async function fetchBlockRowByHash(rpc, hash, heightHint = null) {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/block-fetcher.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/block-fetcher.test.js`
 Expected: PASS, 3 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/block-fetcher.js backend/src/services/chain/block-fetcher.test.js && git commit -m "feat(chain): fetchBlockRow maps getblock+getblockstats to a store row
+cd <backend-repo> && git add backend/src/services/chain/block-fetcher.js backend/src/services/chain/block-fetcher.test.js && git commit -m "feat(chain): fetchBlockRow maps getblock+getblockstats to a store row
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -757,7 +757,7 @@ describe('assembleSnapshot', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/snapshot.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/snapshot.test.js`
 Expected: FAIL — unresolved import `./snapshot.js`.
 
 - [ ] **Step 3: Write the implementation**
@@ -816,13 +816,13 @@ export function assembleSnapshot(store, height, { isTip, tipHeight, supplySats, 
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/snapshot.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/snapshot.test.js`
 Expected: PASS, 5 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/snapshot.js backend/src/services/chain/snapshot.test.js && git commit -m "feat(chain): assemble API snapshots from stored block rows
+cd <backend-repo> && git add backend/src/services/chain/snapshot.js backend/src/services/chain/snapshot.test.js && git commit -m "feat(chain): assemble API snapshots from stored block rows
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -925,7 +925,7 @@ describe('PriceSource', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/supply-tracker.test.js src/services/chain/price-source.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/supply-tracker.test.js src/services/chain/price-source.test.js`
 Expected: FAIL — unresolved imports.
 
 - [ ] **Step 3: Write the implementations**
@@ -1014,13 +1014,13 @@ export class PriceSource {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/supply-tracker.test.js src/services/chain/price-source.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/supply-tracker.test.js src/services/chain/price-source.test.js`
 Expected: PASS, 7 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/supply-tracker.js backend/src/services/chain/price-source.js backend/src/services/chain/supply-tracker.test.js backend/src/services/chain/price-source.test.js && git commit -m "feat(chain): supply checkpoint tracker and cached oracle price source
+cd <backend-repo> && git add backend/src/services/chain/supply-tracker.js backend/src/services/chain/price-source.js backend/src/services/chain/supply-tracker.test.js backend/src/services/chain/price-source.test.js && git commit -m "feat(chain): supply checkpoint tracker and cached oracle price source
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1086,7 +1086,7 @@ describe('MempoolSampler', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/mempool-sampler.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/mempool-sampler.test.js`
 Expected: FAIL — unresolved import.
 
 - [ ] **Step 3: Write the implementation**
@@ -1145,13 +1145,13 @@ export class MempoolSampler {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/mempool-sampler.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/mempool-sampler.test.js`
 Expected: PASS, 4 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/mempool-sampler.js backend/src/services/chain/mempool-sampler.test.js && git commit -m "feat(chain): mempool sampler with inflow, depth and DGB/kB fee estimates
+cd <backend-repo> && git add backend/src/services/chain/mempool-sampler.js backend/src/services/chain/mempool-sampler.test.js && git commit -m "feat(chain): mempool sampler with inflow, depth and DGB/kB fee estimates
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1277,7 +1277,7 @@ describe('TipWatcher', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/tip-watcher.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/tip-watcher.test.js`
 Expected: FAIL — unresolved import.
 
 - [ ] **Step 3: Write the implementation**
@@ -1359,13 +1359,13 @@ Note for the implementer: `EventEmitter` throws on an `'error'` emit with no lis
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/tip-watcher.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/tip-watcher.test.js`
 Expected: PASS, 5 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/tip-watcher.js backend/src/services/chain/tip-watcher.test.js && git commit -m "feat(chain): reorg-safe tip watcher with startup backfill
+cd <backend-repo> && git add backend/src/services/chain/tip-watcher.js backend/src/services/chain/tip-watcher.test.js && git commit -m "feat(chain): reorg-safe tip watcher with startup backfill
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1419,7 +1419,7 @@ describe('SseHub', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/sse-hub.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/sse-hub.test.js`
 Expected: FAIL — unresolved import.
 
 - [ ] **Step 3: Write the implementation**
@@ -1448,13 +1448,13 @@ export class SseHub {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/sse-hub.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/sse-hub.test.js`
 Expected: PASS, 2 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/sse-hub.js backend/src/services/chain/sse-hub.test.js && git commit -m "feat(chain): SSE hub with ping and dead-client eviction
+cd <backend-repo> && git add backend/src/services/chain/sse-hub.js backend/src/services/chain/sse-hub.test.js && git commit -m "feat(chain): SSE hub with ping and dead-client eviction
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1551,7 +1551,7 @@ describe('ChainService', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/chain-service.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/chain-service.test.js`
 Expected: FAIL — unresolved import.
 
 - [ ] **Step 3: Write the implementation**
@@ -1643,13 +1643,13 @@ export class ChainService {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/services/chain/chain-service.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/services/chain/chain-service.test.js`
 Expected: PASS, 3 tests. If the first test's `supply.total` is `null`, the supply scan promise had not resolved before assertion — add `await vi.advanceTimersByTimeAsync(0)` twice (the plan already has one; a second flushes the then-chain).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/services/chain/chain-service.js backend/src/services/chain/chain-service.test.js && git commit -m "feat(chain): ChainService wires watcher, sampler, price, supply and SSE
+cd <backend-repo> && git add backend/src/services/chain/chain-service.js backend/src/services/chain/chain-service.test.js && git commit -m "feat(chain): ChainService wires watcher, sampler, price, supply and SSE
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1747,7 +1747,7 @@ describe('GET /api/chain/stream', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/controllers/chain.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/controllers/chain.test.js`
 Expected: FAIL — unresolved import `./chain.js`.
 
 - [ ] **Step 3: Write the router**
@@ -1807,7 +1807,7 @@ export function createChainRouter({ service }) {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run src/controllers/chain.test.js`
+Run: `cd <backend-repo>/backend && npx vitest run src/controllers/chain.test.js`
 Expected: PASS, 6 tests.
 
 - [ ] **Step 5: Mount in server.js**
@@ -1839,14 +1839,14 @@ if (process.env.CHAIN_MODULE_ENABLED !== 'false') {
 
 And in the shutdown handler (grep `SIGTERM` in server.js), add `chainService.stop();` alongside the other stops.
 
-- [ ] **Step 6: Boot the backend locally against the Adam VPS node and smoke the routes**
+- [ ] **Step 6: Boot the backend locally against the mainnet node node and smoke the routes**
 
-The local box has no mainnet node; point RPC at the Adam VPS over an SSH tunnel (RPC 14022 is localhost-only there). Read the RPC credentials from `/root/.digibyte/digibyte.conf` on that host:
+The local box has no mainnet node; point RPC at the mainnet node over an SSH tunnel (RPC 14022 is localhost-only there). Read the RPC credentials from `<node-config>` on that host:
 
 ```bash
-ssh -f -N -L 14022:127.0.0.1:14022 root@129.212.182.152
-ssh root@129.212.182.152 'grep -E "^rpc(user|password)=" /root/.digibyte/digibyte.conf'
-cd /home/polloloco/digibyte-compendium/backend
+ssh -f -N -L 14022:127.0.0.1:14022 <node-host>
+ssh <node-host> 'grep -E "^rpc(user|password)=" <node-config>'
+cd <backend-repo>/backend
 DGB_RPC_HOST=127.0.0.1 DGB_RPC_PORT=14022 DGB_RPC_USER=<rpcuser> DGB_RPC_PASSWORD=<rpcpassword> PORT=3999 node src/server.js &
 sleep 20
 curl -s localhost:3999/api/chain/tip | python3 -c 'import sys,json; s=json.load(sys.stdin); print(s["height"], s["algo"], s["reward"], s["reduction"], s["supply"], s["price"] and s["price"]["usd"], len(s["recentBlocks"]))'
@@ -1858,13 +1858,13 @@ Expected: tip height ≥ 24,151,775 with 240 recent blocks; the 24151710 block s
 
 - [ ] **Step 7: Run the whole backend suite**
 
-Run: `cd /home/polloloco/digibyte-compendium/backend && npx vitest run 2>&1 | tail -5`
+Run: `cd <backend-repo>/backend && npx vitest run 2>&1 | tail -5`
 Expected: all files green (baseline was 194 files / 1468 tests on 2026-08-08; now +11 files).
 
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/src/controllers/chain.js backend/src/controllers/chain.test.js backend/src/server.js && git commit -m "feat(chain): public /api/chain tip, block and SSE stream routes
+cd <backend-repo> && git add backend/src/controllers/chain.js backend/src/controllers/chain.test.js backend/src/server.js && git commit -m "feat(chain): public /api/chain tip, block and SSE stream routes
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -1904,7 +1904,7 @@ Add to `backend/README.md` under the API section a one-line pointer: `- **/api/c
 - [ ] **Step 2: Commit and open the PR**
 
 ```bash
-cd /home/polloloco/digibyte-compendium && git add backend/docs/chain-api.md backend/README.md && git commit -m "docs(chain): /api/chain feed reference
+cd <backend-repo> && git add backend/docs/chain-api.md backend/README.md && git commit -m "docs(chain): /api/chain feed reference
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>" && git push -u origin feat/chain-timechain-api && gh pr create --base master --title "feat(chain): public /api/chain feed for the DigiByte Timechain app" --body "$(cat <<'EOF'
 Adds a self-contained `chain` service + three public routes (tip, block/:height, SSE stream) built from our own node — the data feed for the new DigiByte Timechain mobile app (spec: JohnnyLawDGB/digibyte-timechain).
@@ -1925,8 +1925,8 @@ EOF
 On the VPS the running checkout is the one PM2 reports; confirm it before pulling:
 
 ```bash
-ssh -i ~/.ssh/DigitalOcean root@digiscope.me 'pm2 describe digiscope-backend | grep -E "cwd|script path"'
-ssh -i ~/.ssh/DigitalOcean root@digiscope.me 'cd <cwd from above> && git fetch && git checkout master && git pull --ff-only && npm ci --omit=dev && pm2 restart digiscope-backend --update-env && sleep 25 && curl -s http://127.0.0.1:3001/api/chain/tip | head -c 300 && echo && timeout 12 curl -sN http://127.0.0.1:3001/api/chain/stream | head -c 400'
+ssh <deploy-host> 'pm2 describe <service> | grep -E "cwd|script path"'
+ssh <deploy-host> 'cd <cwd from above> && git fetch && git checkout master && git pull --ff-only && npm ci --omit=dev && pm2 restart <service> --update-env && sleep 25 && curl -s http://127.0.0.1:3001/api/chain/tip | head -c 300 && echo && timeout 12 curl -sN http://127.0.0.1:3001/api/chain/stream | head -c 400'
 curl -s https://api.digiscope.me/api/chain/tip | head -c 300
 timeout 40 curl -sN https://api.digiscope.me/api/chain/stream | head -c 600
 ```
@@ -1935,8 +1935,8 @@ Expected: JSON tip locally and through nginx; the public stream shows `event: ti
 
 - [ ] **Step 4: Record the deployment**
 
-Append to `~/digibyte-timechain/docs/superpowers/plans/2026-09-04-chain-backend.md` a final line `Deployed <date>: <commit sha> on api.digiscope.me` and commit it in the Timechain repo.
+Append to `<timechain-repo>/docs/superpowers/plans/2026-09-04-chain-backend.md` a final line `Deployed <date>: <commit sha> on api.digiscope.me` and commit it in the Timechain repo.
 
 ---
 
-**Deployed 2026-09-05:** DigiScope backend `main` 91a6fbc (squash of PR #233) on api.digiscope.me. Production is an rsync target (`/opt/digiscope-backend`, code at the repo root, custom `ecosystem.config.cjs`), not a git checkout, so the deploy was surgical: the 18 files the PR changed plus `server.js` patched on top of production's copy (which carries case-report routes not yet in `main`). Backups in `/root/backups/chain-deploy-2026-09-05/`. Added an nginx `location = /api/chain/stream` with `proxy_buffering off` (mirrors the chat stream). Verified publicly: tip, block 24151710 fee band + pool, 404 above tip, 400 below floor, SSE tip/mempool/ping frames, existing routes 200. Release APK v0.1.0 installed on the Note 8 (SM-N950U).
+**Deployed 2026-09-05:** DigiScope backend `main` 91a6fbc (squash of PR #233) on api.digiscope.me. Production is an rsync target (`<backend-deploy-dir>`, code at the repo root, custom `ecosystem.config.cjs`), not a git checkout, so the deploy was surgical: the 18 files the PR changed plus `server.js` patched on top of production's copy (which carries case-report routes not yet in `main`). Backups in `/root/backups/chain-deploy-2026-09-05/`. Added an nginx `location = /api/chain/stream` with `proxy_buffering off` (mirrors the chat stream). Verified publicly: tip, block 24151710 fee band + pool, 404 above tip, 400 below floor, SSE tip/mempool/ping frames, existing routes 200. Release APK v0.1.0 installed on the Note 8 (SM-N950U).

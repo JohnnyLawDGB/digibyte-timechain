@@ -1,7 +1,7 @@
-# SDD ledger — plan: /home/polloloco/digibyte-timechain/docs/superpowers/plans/2026-09-04-flutter-app.md
-Spec: /home/polloloco/digibyte-timechain/docs/superpowers/specs/2026-09-04-digibyte-timechain-design.md
-Worktree: /home/polloloco/wt-timechain-app (branch feat/app from main 3a19db0). App under app/.
-Backend contract source: PR #233 (JohnnyLawDGB/digibyte-compendium), unmerged/undeployed at start — device run (Task 13) needs it live.
+# SDD ledger — plan: <timechain-repo>/docs/superpowers/plans/2026-09-04-flutter-app.md
+Spec: <timechain-repo>/docs/superpowers/specs/2026-09-04-digibyte-timechain-design.md
+Worktree: <app-worktree> (branch feat/app from main 3a19db0). App under app/.
+Backend contract source: PR #233 (the backend repo), unmerged/undeployed at start — device run (Task 13) needs it live.
 
 ## Pre-flight scan (2026-09-04)
 | Pair / task | Produces vs consumes | Finding |
@@ -62,7 +62,7 @@ Task 9: complete (commits 8efd67f..b062bb9 + golden fix d8b592a, review clean af
 Task 10: complete (commits b062bb9..7e913a5 + fix b9ff9ee, review clean after fix round 1)
 Task 11: complete (commits 7e913a5..eea7c3a, review clean)
 Task 12: dispatched (implementer sonnet), BASE d8b592a
-Task 13 prep: Note 9 SM-N950U attached (adb id ce061716640b191c017e); box LAN IP 192.168.7.251; backend not deployed → device run will use the local wt-chain-api backend on :3999 via the Adam VPS RPC tunnel (port 15022) with --dart-define=CHAIN_API_BASE=http://192.168.7.251:3999/api
+Task 13 prep: Note 9 SM-N950U attached (adb id <device-id>); box LAN IP <lan-ip>; backend not deployed → device run will use the local wt-chain-api backend on :3999 via the mainnet node RPC tunnel (port 15022) with --dart-define=CHAIN_API_BASE=http://<lan-ip>:3999/api
 Task 12: implementer DONE_WITH_CONCERNS (3d5b41b; 59 tests): 3 adaptations in dial_screen.dart — Flexible wraps on header/UTC rows; FittedBox(scaleDown)+SizedBox(372) around FeeMempoolCard; real isLive in loading/error branches. Review dispatched.
 Task 12: review needs fixes; adaptations 1 and 3 ruled benign/correct. 2 Important: (plan-mandated) System theme always dark (theme/darkTheme both dark when choice=system); FittedBox+SizedBox(372) around FeeMempoolCard scales it 358/372 on every 390 px device.
 Ruling: (a) app.dart uses theme: light, darkTheme: dark, themeMode: mode (dark/light/system) and the test asserts themeMode too, plus a System case; (b) fix fee_mempool_card.dart title() with Flexible+ellipsis and delete the call-site wrapper; add a 358 px no-overflow test — cost if wrong: none (test-covered).
@@ -74,7 +74,7 @@ Task 12: complete (commits d8b592a..3d5b41b + fixes 60ea542, 3932bca; review cle
 Ruling (Task 13): device run uses the unmerged backend branch booted locally (wt-chain-api, :3999, RPC via tunnel :15022) reached over LAN; Android 9 blocks cleartext, so a DEBUG-ONLY manifest (android/app/src/debug/AndroidManifest.xml) enables usesCleartextTraffic — production keeps https — cost if wrong: none for release builds.
 Task 13: dispatched (implementer sonnet), BASE 3932bca
 Task 13: implementer DONE_WITH_CONCERNS (096f978): device run OK on the Note 9 vs local backend — heights 24,152,802→818 live, LIVE + VIEWING BLOCK pills, scrub/return work, no exceptions/overflows in logcat; airplane-mode checks SKIPPED (non-rooted adb cannot send the protected broadcast); iOS not run (no Mac).
-Ruling (side effect outside the worktree): the implementer patched /opt/flutter/packages/flutter_tools/gradle/build.gradle.kts (+9 lines: tasks.withType<Jar> { duplicatesStrategy = EXCLUDE }) to get past a Gradle 8.10 duplicate FlutterPlugin.class jar error in this SDK checkout (3.29.0, 20 commits diverged). KEPT: reverting breaks Android builds on this box; it is a build-tool workaround with no effect on app code — cost if wrong: an unexpected SDK-level change for the user; revert with `cd /opt/flutter && git checkout -- packages/flutter_tools/gradle/build.gradle.kts`. Surface to the user.
+Ruling (side effect outside the worktree): the implementer patched <flutter-sdk>/packages/flutter_tools/gradle/build.gradle.kts (+9 lines: tasks.withType<Jar> { duplicatesStrategy = EXCLUDE }) to get past a Gradle 8.10 duplicate FlutterPlugin.class jar error in this SDK checkout (3.29.0, 20 commits diverged). KEPT: reverting breaks Android builds on this box; it is a build-tool workaround with no effect on app code — cost if wrong: an unexpected SDK-level change for the user; revert with `cd <flutter-sdk> && git checkout -- packages/flutter_tools/gradle/build.gradle.kts`. Surface to the user.
 Task 13: review dispatched (sonnet), BASE 3932bca
 Controller device findings (from device-01/03 screenshots, real fonts) for the final wave:
  A. Brand symbol renders as a black disc — flutter_svg does not apply <style> CSS classes (.st0/.st1/.st2) in assets/brand/digibyte_symbol.svg → inline the fills.

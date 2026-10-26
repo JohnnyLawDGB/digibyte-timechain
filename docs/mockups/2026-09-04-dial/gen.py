@@ -3,7 +3,7 @@
 import math, json, datetime, os
 here = os.path.dirname(os.path.abspath(__file__))
 
-# ---- real data (Adam VPS mainnet node, 2026-09-04) ----
+# ---- real data (mainnet node mainnet node, 2026-09-04) ----
 blocks = []  # newest first: height, algo, size, ntx, time
 for line in open(os.path.join(here, "last240.txt")):
     h, a, s, n, t = line.split()

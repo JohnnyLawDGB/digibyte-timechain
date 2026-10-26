@@ -109,7 +109,7 @@ block's timestamp instead of a running counter.
 
 ## 5. Backend: `chain` module in the DigiScope Express backend
 
-Lives in the DigiScope backend repo (`/opt/digiscope-backend` on the VPS;
+Lives in the backend repo (`<backend-deploy-dir>` on the VPS;
 first implementation step is cloning it locally). All routes are public and
 unauthenticated, rate-limited by the existing nginx config.
 
@@ -205,7 +205,7 @@ Backend:
 - Route tests (jest + supertest) against a mocked RPC client: tip, block,
   stream framing, 503 path.
 - Snapshot builder unit tests with recorded RPC fixtures from mainnet.
-- Verified 2026-09-04 against Core source and the Adam VPS mainnet node:
+- Verified 2026-09-04 against Core source and the mainnet node mainnet node:
   reduction schedule constants (§4), `pow_algo` in `getblock`, and
   `getblockstats` (returns subsidy, totalfee, min/max feerate). Still to
   confirm in the plan: DigiScope's existing price source and its refresh
@@ -221,6 +221,6 @@ Flutter:
 
 ## 9. Deploy
 
-- Backend: merge to the DigiScope backend, `pm2 restart digiscope-backend`,
+- Backend: merge to the DigiScope backend, `pm2 restart <service>`,
   nginx location for `/api/chain/stream` with `proxy_buffering off`.
 - App: debug builds sideloaded; store submission is a separate later task.
